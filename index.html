@@ -1,0 +1,1184 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>黄金消费趋势 AI 研判系统</title>
+<style>
+@font-face { font-family: "SHS"; src: url(vendor/fonts/shs-heavy.woff2) format("woff2"); font-weight: 900; font-display: block; }
+@font-face { font-family: "SHS"; src: url(vendor/fonts/shs-medium.woff2) format("woff2"); font-weight: 500; font-display: block; }
+@font-face { font-family: "Geist"; src: url(vendor/fonts/Geist-Variable.woff2) format("woff2"); font-weight: 100 900; font-display: block; }
+@font-face { font-family: "Geist Mono"; src: url(vendor/fonts/GeistMono-Variable.woff2) format("woff2"); font-weight: 100 900; font-display: block; }
+:root {
+  --void: #0C0907; --ink: #F4EBDD; --mute: #A69580; --dim: #6E6152; --line: rgba(244, 235, 221, .13);
+  --gold: #F2B640; --hot: #FFE7B0; --ember: #FF7A33;
+  --zh: "SHS", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --num: "Geist", var(--zh);
+  --mono: "Geist Mono", var(--zh);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--void); }
+body { color: var(--ink); font-family: var(--zh); font-weight: 500; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--gold); color: var(--void); }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--hot); outline-offset: 3px; border-radius: 4px; }
+#gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+
+.scrim { position: fixed; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(12, 9, 7, .9) 0%, rgba(12, 9, 7, .55) 30%, rgba(12, 9, 7, 0) 52%); transition: opacity 1s; }
+body.t0 .scrim { opacity: 1; }
+#tags { position: fixed; inset: 0; pointer-events: none; font-size: calc(14px * var(--k, 1)); }
+.tag { position: absolute; left: 0; top: 0; white-space: nowrap; opacity: 0; transition: opacity .7s; }
+.tag.on { opacity: 1; }
+.tag > div { position: relative; padding: .4em .7em; border-radius: 4px; background: rgba(12, 9, 7, .8); line-height: 1.35; color: var(--ink); }
+.tag b { font-family: var(--num); font-weight: 600; color: var(--gold); font-size: 1.15em; font-variant-numeric: tabular-nums; }
+.tag small { display: block; color: var(--mute); font-size: .86em; }
+.tag .up { transform: translate(-50%, calc(-100% - 10px)); text-align: center; }
+.tag .up::after { content: ""; position: absolute; left: 50%; bottom: -10px; width: 1px; height: 10px; background: rgba(244, 235, 221, .45); }
+.tag .lf { transform: translate(calc(-100% - 12px), -50%); text-align: right; }
+.tag .rt { transform: translate(12px, -50%); }
+.tag .yr { transform: translate(-50%, 6px); background: none; padding: 0; color: var(--mute); font-family: var(--num); font-weight: 500; font-size: 1.05em; }
+.tag .yr.fut { color: var(--hot); }
+.tag .ax { background: none; padding: 0; color: var(--mute); transform: translate(-50%, -50%); }
+.tag .big b { font-size: 1.5em; }
+.tag .src { transform: translate(-50%, calc(-100% - 14px)); text-align: center; border: 1px solid rgba(255, 231, 176, .35); }
+
+.stage { position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; transform-origin: 50% 50%; pointer-events: none; }
+.stage > * { pointer-events: auto; }
+.brand { position: absolute; left: 72px; top: 50px; display: flex; align-items: center; gap: 14px; font-size: 17px; letter-spacing: .04em; }
+.brand svg { width: 28px; height: 28px; }
+.brand span { color: var(--mute); font-size: 15px; margin-left: 4px; }
+.brand em { font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--dim); margin-left: 12px; }
+
+.title { position: absolute; left: 0; right: 0; top: 200px; text-align: center; transition: opacity .9s, transform 1.1s cubic-bezier(.2, .7, .2, 1); }
+.title h1 { font-weight: 900; font-size: 104px; line-height: 1.1; letter-spacing: .02em; }
+.title h1 em { font-style: normal; font-family: var(--num); font-weight: 700; letter-spacing: 0; color: var(--hot); margin: 0 .12em; }
+.title p { margin: 26px auto 0; max-width: 40em; font-size: 21px; line-height: 1.7; color: var(--mute); }
+.title .go { margin-top: 470px; display: inline-flex; align-items: center; gap: 14px; height: 56px; padding: 0 30px 0 24px; border-radius: 28px;
+  background: var(--gold); color: #1A1208; font-size: 19px; font-weight: 900; letter-spacing: .06em; box-shadow: 0 10px 40px rgba(242, 182, 64, .28); transition: transform .25s, box-shadow .25s; }
+.title .go:hover { transform: translateY(-2px); box-shadow: 0 14px 48px rgba(242, 182, 64, .4); }
+.title .go svg { width: 18px; height: 18px; }
+.title .go kbd { font-family: var(--mono); font-size: 12px; font-weight: 500; padding: 3px 7px; border-radius: 4px; background: rgba(26, 18, 8, .14); }
+body:not(.t0) .title { opacity: 0; transform: translateY(-30px); pointer-events: none; }
+
+.narr { position: absolute; left: 72px; top: 128px; width: 860px; transition: opacity .6s; }
+body.t0 .narr, body.tf .narr { opacity: 0; pointer-events: none; }
+.narr h2 { font-weight: 900; font-size: 60px; line-height: 1.2; letter-spacing: .01em; min-height: 72px; }
+.caret { display: inline-block; width: .46em; height: .95em; margin-left: .08em; vertical-align: -.1em; background: var(--hot); box-shadow: 0 0 14px rgba(255, 231, 176, .55); }
+.caret.end { animation: blink .5s steps(1) 3, caretOut .35s 1.5s forwards; }
+@keyframes caretOut { to { opacity: 0; width: 0; margin: 0; } }
+.num { opacity: 0; transform: translateY(10px); transition: opacity .5s, transform .7s cubic-bezier(.16, 1, .3, 1); }
+.num.on { opacity: 1; transform: none; }
+.narr p { min-height: 3.5em; }
+.nums { margin-top: 30px; display: flex; gap: 64px; }
+.num b { display: block; font-family: var(--num); font-weight: 600; font-size: 100px; line-height: .95; letter-spacing: -.035em; color: var(--gold); font-variant-numeric: tabular-nums; }
+.num b.cool { color: var(--ink); }
+.num span { display: block; margin-top: 12px; font-size: 16px; color: var(--mute); }
+.narr p { margin-top: 26px; max-width: 34em; font-size: 19px; line-height: 1.75; color: var(--mute); }
+
+/* 研判引擎 */
+.eng { position: absolute; right: 56px; top: 44px; bottom: 112px; width: 452px; padding: 24px 26px 18px; border-radius: 8px;
+  background: rgba(12, 9, 7, .8); border: 1px solid var(--line); display: flex; flex-direction: column; transition: opacity .7s, transform .9s cubic-bezier(.16, 1, .3, 1); }
+body.t0 .eng { opacity: 0; transform: translateX(30px); pointer-events: none; }
+.eng header { display: flex; align-items: center; justify-content: space-between; }
+.eng h3 { font-size: 19px; font-weight: 900; letter-spacing: .04em; }
+.state { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--hot); }
+.state i { width: 8px; height: 8px; border-radius: 50%; background: var(--hot); box-shadow: 0 0 0 0 rgba(255, 231, 176, .6); animation: ping 1.5s infinite; }
+body.tf .state i, body.paused .state i { animation: none; }
+body.paused .state { color: var(--mute); }
+body.paused .state i { background: var(--mute); }
+@keyframes ping { 70% { box-shadow: 0 0 0 9px rgba(255, 231, 176, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 231, 176, 0); } }
+.asof { margin-top: 6px; font-size: 13px; color: var(--dim); }
+.eng h4 { margin-top: 14px; font-size: 13px; font-weight: 500; color: var(--mute); letter-spacing: .08em; }
+.srcs { list-style: none; margin-top: 10px; }
+.srcs li { display: grid; grid-template-columns: 14px 1fr auto; align-items: center; gap: 10px; height: 28px; font-size: 14.5px; color: var(--dim); transition: color .5s; }
+.srcs li i { width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--dim); transition: all .5s; }
+.srcs li b { font-family: var(--num); font-weight: 500; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.srcs li.on { color: var(--ink); }
+.srcs li.on i { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 10px rgba(242, 182, 64, .7); }
+.srcs li.on b { color: var(--gold); }
+.srcs li.hit { animation: hit 1s; }
+@keyframes hit { from { background: rgba(255, 231, 176, .16); } }
+.srcs li.plan { color: var(--dim); }
+.srcs li.plan i { border-style: dashed; }
+.srcs li.plan b { font-family: var(--zh); font-size: 12.5px; color: var(--dim); border: 1px dashed rgba(110, 97, 82, .7); border-radius: 3px; padding: 1px 6px; }
+.meter { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding-top: 16px; border-top: 1px solid var(--line); }
+.meter small { display: block; font-size: 13px; color: var(--mute); }
+.meter b { display: block; margin-top: 4px; font-family: var(--num); font-weight: 600; font-size: 30px; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.log { flex: 1; min-height: 0; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 45%); mask-image: linear-gradient(180deg, transparent, #000 45%); }
+.log ol { list-style: none; }
+.log li { display: flex; justify-content: space-between; gap: 12px; font-family: var(--mono); font-size: 12.5px; line-height: 1.95; color: #CDBFA9; }
+.log li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log li b { font-weight: 500; color: var(--gold); white-space: nowrap; }
+.log li.old { color: var(--dim); }
+.log li.old b { color: var(--dim); }
+.log li .c::after { content: ""; display: inline-block; width: 7px; height: 13px; margin-left: 2px; vertical-align: -2px; background: var(--hot); animation: blink .7s steps(1) infinite; }
+.log li b.w { color: var(--hot); }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* 结论 */
+.fin { position: absolute; left: 72px; top: 128px; width: 1320px; transition: opacity .9s .3s; }
+.fin2 { position: absolute; left: 72px; bottom: 112px; display: flex; align-items: center; gap: 36px; padding: 18px 26px 18px 18px; border-radius: 8px; background: rgba(12, 9, 7, .82); border: 1px solid var(--line); transition: opacity .9s .6s; }
+body:not(.tf) .fin, body:not(.tf) .fin2 { opacity: 0; pointer-events: none; transition-delay: 0s; }
+.fin h2 { font-weight: 900; font-size: 54px; line-height: 1.25; }
+.fin h2 b { font-family: var(--num); font-weight: 600; color: var(--gold); letter-spacing: -.02em; }
+.chain { list-style: none; margin-top: 22px; display: flex; flex-wrap: wrap; gap: 10px 10px; max-width: 1300px; }
+.chain li { display: flex; align-items: center; gap: 10px; font-size: 16px; color: var(--mute); }
+.chain li b { font-family: var(--num); font-weight: 600; color: var(--ink); }
+.chain li + li::before { content: ""; width: 18px; height: 1px; background: var(--dim); }
+.scen { display: inline-flex; padding: 4px; border-radius: 26px; border: 1px solid var(--line); background: rgba(12, 9, 7, .6); }
+.scen button { height: 40px; padding: 0 22px; border-radius: 20px; font-size: 16px; color: var(--mute); transition: background .3s, color .3s; }
+.scen button:hover { color: var(--ink); }
+.scen button[aria-pressed="true"] { background: var(--gold); color: #1A1208; font-weight: 900; }
+.fy { display: grid; grid-template-columns: repeat(5, 112px); }
+.fy div { padding-top: 10px; border-top: 2px solid var(--line); }
+.fy div.k { border-top-color: var(--gold); }
+.fy small { font-family: var(--num); font-size: 15px; color: var(--mute); }
+.fy b { display: block; margin-top: 2px; font-family: var(--num); font-weight: 600; font-size: 30px; letter-spacing: -.02em; }
+.fy div.k b { color: var(--gold); }
+
+
+.evi { display: none; }
+body.tf .srcs, body.tf .meter, body.tf .log, body.tf .eng h4.s, body.tf .plan, body.tf .math { display: none; }
+.dag { display: block; width: 100%; height: 96px; margin-top: 14px; }
+.plan { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12.5px; color: var(--dim); }
+.plan i { font-style: normal; padding: 2px 7px; border: 1px dashed rgba(110, 97, 82, .75); border-radius: 3px; }
+.math { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.mt { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--mute); }
+.mt b { font-weight: 500; color: var(--hot); letter-spacing: .02em; }
+.fx { margin-top: 8px; min-height: 92px; font-family: var(--num); font-size: 18px; color: var(--ink); }
+.fx .ln { display: flex; align-items: center; flex-wrap: wrap; gap: 2px 6px; min-height: 44px; opacity: 0; transform: translateY(8px); filter: blur(6px); transition: opacity .7s, transform .7s, filter .7s; }
+.fx .ln.on { opacity: 1; transform: none; filter: none; }
+.fx i { font-style: italic; font-family: var(--num); }
+.fx sub, .fx sup { font-size: .62em; line-height: 0; }
+.fx .fr { display: inline-flex; flex-direction: column; align-items: center; font-size: .84em; line-height: 1.2; vertical-align: middle; }
+.fx .fr > span:first-child { padding: 0 4px 2px; border-bottom: 1px solid currentColor; }
+.fx .fr > span:last-child { padding: 2px 4px 0; }
+.fx .tk { display: inline-block; transition: color .4s; }
+.fx .tk.num { color: var(--hot); animation: flip .7s cubic-bezier(.16, 1, .3, 1); }
+@keyframes flip { from { opacity: 0; transform: translateY(-8px); filter: blur(6px); } }
+.fx .res { font-weight: 600; color: var(--gold); opacity: 0; transform: scale(.9); transition: opacity .6s, transform .6s, text-shadow 1s; }
+.fx .res.on { opacity: 1; transform: none; text-shadow: 0 0 16px rgba(242, 182, 64, .6); }
+#viz { display: block; width: 100%; height: 150px; margin-top: 6px; }
+body.tf .evi { display: block; }
+.evi section { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.evi h5 { font-size: 13px; font-weight: 500; color: var(--mute); letter-spacing: .06em; }
+.evi .v { margin-top: 10px; font-family: var(--num); font-weight: 600; font-size: 34px; letter-spacing: -.02em; color: var(--gold); }
+.evi .v small { font-family: var(--zh); font-size: 15px; font-weight: 500; color: var(--mute); margin-left: 4px; }
+.evi p { margin-top: 6px; font-size: 14.5px; line-height: 1.7; color: #CDBFA9; }
+
+/* 进度 */
+.rail { position: absolute; left: 72px; right: 56px; bottom: 40px; display: flex; align-items: center; gap: 24px; transition: opacity .6s; }
+body.t0 .rail { opacity: 0; pointer-events: none; }
+.rail .pp { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(244, 235, 221, .3); display: grid; place-items: center; transition: border-color .3s; }
+.rail .pp:hover, .rail .xp:hover { border-color: var(--hot); }
+.rail .pp svg { width: 15px; height: 15px; fill: var(--ink); }
+.steps { flex: 1; list-style: none; display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+.steps button { width: 100%; text-align: left; padding-top: 13px; position: relative; font-size: 14.5px; color: var(--dim); transition: color .3s; }
+.steps button::before { content: ""; position: absolute; inset: 0 0 auto; height: 2px; background: rgba(244, 235, 221, .14); }
+.steps button i { position: absolute; left: 0; top: 0; height: 2px; width: 0; background: var(--hot); }
+.steps button b { font-family: var(--num); font-weight: 500; margin-right: 8px; }
+.steps button.done { color: var(--mute); }
+.steps button.done i { width: 100%; background: var(--gold); }
+.steps button.now { color: var(--ink); }
+.steps button:hover { color: var(--ink); }
+.rail .xp { flex: none; height: 44px; padding: 0 20px; border-radius: 22px; border: 1px solid rgba(244, 235, 221, .3); font-size: 15px; transition: border-color .3s; }
+.note { position: absolute; left: 72px; right: 480px; bottom: 10px; font-size: 12px; color: var(--dim); transition: opacity .6s; }
+body.t0 .note { opacity: 0; }
+
+/* 图表导出 */
+.sheet { position: fixed; inset: 0; z-index: 9; display: grid; place-items: center; background: rgba(8, 6, 4, .74); opacity: 0; pointer-events: none; transition: opacity .3s; }
+.sheet.open { opacity: 1; pointer-events: auto; }
+.sheet .pad { width: min(1500px, 94vw); height: min(880px, 92vh); display: flex; flex-direction: column; padding: 26px 30px; border-radius: 10px; background: #FFFFFF; color: #1D1810; font-family: var(--zh); }
+.sheet header { display: flex; align-items: baseline; gap: 16px; }
+.sheet h2 { font-size: 22px; font-weight: 900; }
+.sheet header p { flex: 1; font-size: 14px; color: #6B6153; }
+.sheet header button { height: 34px; padding: 0 14px; border: 1px solid #D9D1C4; border-radius: 6px; font-size: 14px; }
+.sheet .g { flex: 1; min-height: 0; margin-top: 16px; display: grid; grid-template: 1fr 1fr / 1fr 1fr; gap: 18px 28px; }
+.card { display: flex; flex-direction: column; min-height: 0; }
+.card header { justify-content: space-between; align-items: center; }
+.card h4 { font-size: 16px; font-weight: 900; }
+.card button { height: 28px; padding: 0 12px; border: 1px solid #D9C9A6; border-radius: 5px; font-size: 13px; color: #7A5410; }
+.card .c { flex: 1; min-height: 0; }
+@media (prefers-reduced-motion: reduce) { .caret.end { animation: none; opacity: 0; } }
+</style>
+</head>
+<body class="t0">
+<canvas id="gl" aria-label="液态黄金数据场景"></canvas>
+<div class="scrim"></div>
+<div id="tags"></div>
+
+<div class="stage" id="stage">
+  <div class="brand">
+    <svg viewBox="0 0 28 28" aria-hidden="true"><path d="M5 20.5 8.2 9h11.6L23 20.5Z" fill="#F2B640"/><path d="M8.2 9 14 4.5 19.8 9" fill="none" stroke="#FFE7B0" stroke-width="1.6" stroke-linejoin="round"/></svg>
+    黄金消费趋势 AI 研判系统<span>黄浦区黄金珠宝产业</span><em id="fps" hidden></em>
+  </div>
+
+  <section class="title" id="title">
+    <h1>黄金消费趋势<em>AI</em>研判</h1>
+    <p id="tsub"></p>
+    <button class="go" id="go"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M5 3.5v11l9-5.5z" fill="currentColor"/></svg>启动研判<kbd>空格</kbd></button>
+  </section>
+
+  <section class="narr" aria-live="polite">
+    <h2 id="head"></h2>
+    <div class="nums" id="nums"></div>
+    <p id="sub"></p>
+  </section>
+
+  <section class="fin">
+    <h2 id="fh"></h2>
+    <ol class="chain" id="chain"></ol>
+  </section>
+  <section class="fin2">
+    <div class="scen" id="scen" role="group" aria-label="预测情景"></div>
+    <div class="fy" id="fy"></div>
+  </section>
+
+  <aside class="eng" aria-label="研判引擎">
+    <header><h3>研判引擎</h3><div class="state"><i></i><span id="st">待命</span></div></header>
+    <div class="asof" id="asof"></div>
+    <canvas class="dag" id="dag" aria-label="推理管线"></canvas>
+    <h4 class="s">信息源</h4>
+    <ul class="srcs" id="srcs"></ul>
+    <div class="plan" id="plan"></div>
+    <section class="math" aria-live="polite"><div class="mt"><b id="mTerm"></b><span id="mSub"></span></div><div class="fx" id="fx"></div><canvas id="viz" aria-label="推演可视化"></canvas></section>
+    <div class="meter"><div><small>已处理记录</small><b id="mRec">0</b></div><div><small>情景推演</small><b id="mSim">0</b></div></div>
+    <div class="log"><ol id="log"></ol></div>
+    <div class="evi">
+      <section><h5>行业佐证（二所工作材料）</h5><div class="v">14.47<small>亿元</small></div><p>2026 年 1–9 月行业入库税收，同比 +32%；新晋首店 6 户，户管金银首饰企业 44 户。</p></section>
+      <section><h5>新晋品牌（企业销售台账）</h5><div class="v" id="nv"></div><p id="np"></p></section>
+      <section><h5>预测假设</h5><p id="as"></p></section>
+      <section><h5>宏观研判背景（需求方提供，非模型输出）</h5><p>美联储加息、美元走强，对金价形成压制，支持金价自高位回落的判断。</p></section>
+    </div>
+  </aside>
+
+  <nav class="rail" aria-label="研判步骤">
+    <button class="pp" id="pp" aria-label="暂停"></button>
+    <ol class="steps" id="steps"></ol>
+    <button class="xp" id="xp">导出图表</button>
+  </nav>
+  <footer class="note" id="note"></footer>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-label="导出图表">
+  <div class="pad">
+    <header><h2>汇报图表</h2><p>白底高清 PNG，可直接插入 PPT</p><button id="close">关闭</button></header>
+    <div class="g">
+      <div class="card"><header><h4>Au99.99 收盘价（元/克）</h4><button data-c="c1">导出 PNG</button></header><div class="c" id="c1"></div></div>
+      <div class="card"><header><h4>年均金价与克重消费</h4><button data-c="c2">导出 PNG</button></header><div class="c" id="c2"></div></div>
+      <div class="card"><header><h4 id="c3t"></h4><button data-c="c3">导出 PNG</button></header><div class="c" id="c3"></div></div>
+      <div class="card"><header><h4>销售额情景预测（亿元）</h4><button data-c="c4">导出 PNG</button></header><div class="c" id="c4"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/echarts.min.js"></script>
+<script src="data.js"></script>
+<script>
+(() => {
+'use strict';
+const D = window.DATA, $ = id => document.getElementById(id);
+
+// ===================== 模型 =====================
+const NY = D.years.length, Y0 = +D.years[0], YL = +D.years[NY - 1];
+const EPS = D.elasticity, S0 = D.salesAnnual[NY - 1] / 1e8, P0 = D.price[NY - 1];
+const FY = [1, 2, 3, 4, 5].map(i => YL + i);
+const daily = D.daily, ND = daily.length;
+// 部分调整模型：均衡销售额 S* = S0·(P_t/P0)^(1+ε)，实际销售额每年以修复速度 λ 向 S* 调整
+const SCEN = {
+  opt:  { name: '乐观', g: -0.05, lam: 0.5, note: '金价自当前月均每年下降 5%，修复速度 λ = 0.5' },
+  base: { name: '基准', g: -0.03, lam: 0.4, note: '金价自当前月均每年下降 3%，修复速度 λ = 0.4' },
+  con:  { name: '保守', g: 0,     lam: 0.4, note: '金价维持当前月均，修复速度 λ = 0.4' },
+};
+function sim({ g, lam }) {
+  let S = S0;
+  return FY.map((y, i) => {
+    const P = D.nowPrice * Math.pow(1 + g, i + 1), Ss = S0 * Math.pow(P / P0, 1 + EPS);
+    const Sn = S * Math.pow(Ss / S, lam), gr = Sn / S - 1; S = Sn;
+    return { y, S: Sn, gr, P, V: Sn * 1e8 / P / 1e6 };
+  });
+}
+const RUN = Object.fromEntries(Object.keys(SCEN).map(k => [k, sim(SCEN[k])]));
+let scen = 'base';
+// 引擎情景扫描：金价年变动 g ∈ [−8%, +1.9%] × 修复速度 λ ∈ [0.25, 0.547]，共 10,000 组
+const SWEEP = [];
+for (let a = 0; a < 100; a++) for (let b = 0; b < 100; b++) SWEEP.push(sim({ g: -0.08 + a * 0.001, lam: 0.25 + b * 0.003 }));
+const g27 = SWEEP.map(r => r[0].gr).sort((a, b) => a - b);
+const upShare = SWEEP.filter(r => r[0].gr > 0 && r[1].gr > 0).length / SWEEP.length;
+
+const MINUS = '−';
+const sgn = (v, d = 1) => (v >= 0 ? '+' : MINUS) + Math.abs(v).toFixed(d);
+const pct = (v, d = 1) => sgn(v * 100, d) + '%';
+const thou = v => Math.round(v).toLocaleString('en-US');
+const yi = v => (v / 1e8).toFixed(1);
+const sales = D.salesAnnual.map(v => v / 1e8);
+let pMax = 0, pMaxI = 0; daily.forEach((d, i) => { if (d[1] > pMax) { pMax = d[1]; pMaxI = i; } });
+const rise10 = D.lastClose / daily[0][1], priceUp = P0 / D.price[0] - 1, volLeft = D.volume[NY - 1] / D.volume[0];
+const fromPeak = D.lastClose / D.peak[1] - 1;
+const avg = a => a.reduce((s, x) => s + x, 0) / a.length;
+const mP = avg(D.price), mS = avg(sales);
+const rB = D.price.reduce((s, x, i) => s + (x - mP) * (sales[i] - mS), 0) / D.price.reduce((s, x) => s + (x - mP) ** 2, 0), rA = mS - rB * mP;
+const yLab = k => (Y0 + k) + (k === NY - 1 ? '*' : '');
+const newSum = D.newcomers.reduce((s, x) => s + x.sales, 0);
+
+// ===================== 渲染管线 =====================
+const R = new THREE.WebGLRenderer({ canvas: $('gl'), antialias: false, powerPreference: 'high-performance' });
+const floatLinear = R.extensions.has('OES_texture_float_linear');
+const VOID = new THREE.Color(0.0055, 0.0042, 0.003);
+R.setClearColor(VOID, 1);
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(VOID, 0.017);
+const cam = new THREE.PerspectiveCamera(34, 16 / 9, 0.1, 400);
+
+// 摄影棚环境：长条柔光箱打在金属上
+const pm = new THREE.PMREMGenerator(R);
+const envScene = new THREE.Scene(); envScene.background = new THREE.Color(0.012, 0.009, 0.006);
+function softbox(w, h, p, k, hex) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(hex).multiplyScalar(k), side: THREE.DoubleSide }));
+  m.position.set(...p); m.lookAt(0, 0, 0); envScene.add(m);
+}
+softbox(70, 7, [0, 16, -34], 1.7, 0xFFF2DE);
+softbox(7, 34, [-34, 12, -2], 1.3, 0xFFE4BE);
+softbox(7, 34, [34, 10, 8], 0.7, 0xFFD39C);
+softbox(50, 4, [0, 34, 6], 0.5, 0xFFFFFF);
+softbox(80, 8, [0, -10, 34], 0.22, 0xFFB46E);
+const envMap = pm.fromScene(envScene, 0.035).texture;
+
+// ---------- 金池（高度场） ----------
+const PW = 56, PD = 30, TW = 1024, TH = 550, HS = 3.2;
+const bufA = new Float32Array(TW * TH * 2), bufB = new Float32Array(TW * TH * 2);
+function dataTex(buf) {
+  const t = new THREE.DataTexture(buf, TW, TH, THREE.RGFormat, THREE.FloatType);
+  t.minFilter = t.magFilter = floatLinear ? THREE.LinearFilter : THREE.NearestFilter; t.needsUpdate = true; return t;
+}
+const texA = dataTex(bufA), texB = dataTex(bufB);
+const SWd = 512, SHd = 276;
+const rtOpt = { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
+let ripA = new THREE.WebGLRenderTarget(SWd, SHd, rtOpt), ripB = new THREE.WebGLRenderTarget(SWd, SHd, rtOpt);
+const rtH = new THREE.WebGLRenderTarget(TW, TH, { ...rtOpt, type: floatLinear ? THREE.FloatType : THREE.HalfFloatType });
+const U = { uA: { value: texA }, uB: { value: texB }, uRip: { value: ripA.texture }, uMix: { value: 1 }, uHS: { value: HS }, uRipAmp: { value: 1.0 }, uTime: { value: 0 } };
+const PU = { uH: { value: rtH.texture }, uTexel: { value: new THREE.Vector2(1 / TW, 1 / TH) }, uPlate: { value: new THREE.Vector2(PW, PD) }, uHeat: { value: 2.4 } };
+const GLSL_PLATE = `
+uniform sampler2D uH; uniform vec2 uTexel, uPlate; uniform float uHeat; varying vec2 vH;
+vec3 heatRamp(float t) {
+  t = clamp(t, 0.0, 1.0);
+  vec3 c = mix(vec3(0.0), vec3(0.6, 0.05, 0.0), smoothstep(0.22, 0.42, t));
+  c = mix(c, vec3(1.0, 0.26, 0.02), smoothstep(0.42, 0.62, t));
+  c = mix(c, vec3(1.0, 0.6, 0.16), smoothstep(0.62, 0.84, t));
+  c = mix(c, vec3(1.0, 0.93, 0.78), smoothstep(0.84, 1.0, t));
+  return c * (0.5 + 2.8 * smoothstep(0.22, 1.0, t));
+}
+`;
+const plateMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(1.0, 0.7, 0.29), metalness: 1, roughness: 0.23, envMap, envMapIntensity: 0.95 });
+plateMat.onBeforeCompile = sh => {
+  Object.assign(sh.uniforms, PU);
+  sh.vertexShader = GLSL_PLATE + sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = vec3(position); vH = uv; transformed.y += texture2D(uH, uv).r;');
+  sh.fragmentShader = GLSL_PLATE + sh.fragmentShader
+    .replace('#include <normal_fragment_begin>', `
+      float hL = texture2D(uH, vH - vec2(uTexel.x, 0.0)).r, hR = texture2D(uH, vH + vec2(uTexel.x, 0.0)).r;
+      float hD = texture2D(uH, vH - vec2(0.0, uTexel.y)).r, hU = texture2D(uH, vH + vec2(0.0, uTexel.y)).r;
+      vec3 nObj = normalize(vec3(-(hR - hL) / (2.0 * uTexel.x * uPlate.x), 1.0, (hU - hD) / (2.0 * uTexel.y * uPlate.y)));
+      vec3 normal = normalize((viewMatrix * vec4(nObj, 0.0)).xyz);
+      vec3 geometryNormal = normal; float faceDirection = 1.0;`)
+    .replace('#include <emissivemap_fragment>', 'totalEmissiveRadiance += heatRamp(texture2D(uH, vH).g) * uHeat;')
+    .replace('#include <dithering_fragment>', `#include <dithering_fragment>
+      float ef = smoothstep(0.0, 0.16, vH.x) * smoothstep(1.0, 0.84, vH.x) * smoothstep(0.0, 0.1, vH.y) * smoothstep(1.0, 0.7, vH.y);
+      gl_FragColor.rgb = mix(vec3(${VOID.r}, ${VOID.g}, ${VOID.b}), gl_FragColor.rgb, ef);`);
+};
+const plateGeo = new THREE.PlaneGeometry(PW, PD, 360, 194); plateGeo.rotateX(-Math.PI / 2);
+const plate = new THREE.Mesh(plateGeo, plateMat); plate.frustumCulled = false; scene.add(plate);
+const key = new THREE.DirectionalLight(0xFFE9C8, 0.7); key.position.set(-6, 14, 8); scene.add(key);
+
+// ---------- 涟漪模拟 ----------
+const qCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), qScene = new THREE.Scene();
+const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); quad.frustumCulled = false; qScene.add(quad);
+const QV = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+const simMat = new THREE.ShaderMaterial({
+  uniforms: { uPrev: { value: null }, uD: { value: new THREE.Vector2(1 / SWd, 1 / SHd) }, uDrop: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, uAsp: { value: PW / PD } },
+  vertexShader: QV,
+  fragmentShader: `uniform sampler2D uPrev; uniform vec2 uD; uniform vec4 uDrop[4]; uniform float uAsp; varying vec2 vUv;
+    void main() {
+      vec4 o = texture2D(uPrev, vUv);
+      float a = (texture2D(uPrev, vUv - vec2(uD.x, 0.0)).r + texture2D(uPrev, vUv + vec2(uD.x, 0.0)).r + texture2D(uPrev, vUv - vec2(0.0, uD.y)).r + texture2D(uPrev, vUv + vec2(0.0, uD.y)).r) * 0.25;
+      o.g += (a - o.r) * 2.0; o.g *= 0.994; o.r += o.g; o.r *= 0.9975;
+      for (int i = 0; i < 4; i++) { vec4 d = uDrop[i]; if (d.w != 0.0) { float k = max(0.0, 1.0 - length((vUv - d.xy) * vec2(uAsp, 1.0)) / d.z); o.r += (0.5 - cos(k * 3.14159) * 0.5) * d.w; } }
+      gl_FragColor = o;
+    }`,
+});
+const dropQ = [];
+function ripple(x, z, r, s) { dropQ.push(new THREE.Vector4((x + PW / 2) / PW, (PD / 2 - z) / PD, r / PD, s)); }
+function stepRipple() {
+  quad.material = simMat;
+  for (let n = 0; n < 2; n++) {
+    simMat.uniforms.uDrop.value.forEach(v => { const d = dropQ.shift(); v.copy(d || v.set(0, 0, 0, 0)); });
+    simMat.uniforms.uPrev.value = ripA.texture; R.setRenderTarget(ripB); R.render(qScene, qCam);
+    [ripA, ripB] = [ripB, ripA];
+  }
+  U.uRip.value = ripA.texture;
+}
+
+// 高度场合成：数据形态 × 铸造波前 + 涟漪 + 熔金微澜（每帧一次，替代逐像素重算）
+const hMat = new THREE.ShaderMaterial({ uniforms: U, vertexShader: QV, fragmentShader: `
+  uniform sampler2D uA, uB, uRip; uniform float uMix, uHS, uRipAmp, uTime; varying vec2 vUv;
+  float hsh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float vno(vec2 p) { vec2 i = floor(p), f = fract(p), u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hsh(i), hsh(i + vec2(1.0, 0.0)), u.x), mix(hsh(i + vec2(0.0, 1.0)), hsh(i + vec2(1.0, 1.0)), u.x), u.y); }
+  void main() {
+    float m = smoothstep(0.0, 1.0, uMix * 1.7 - vUv.x * 0.7);
+    vec2 a = texture2D(uA, vUv).rg, b = texture2D(uB, vUv).rg;
+    float s = (vno(vUv * vec2(34.0, 18.0) + vec2(uTime * 0.11, -uTime * 0.07)) - 0.5) * 0.019 + (vno(vUv * vec2(97.0, 52.0) - vec2(uTime * 0.19, 0.0)) - 0.5) * 0.007;
+    float h = mix(a.r, b.r, m) * uHS + texture2D(uRip, vUv).r * uRipAmp + s;
+    float front = (1.0 - abs(m * 2.0 - 1.0)) * smoothstep(0.004, 0.04, abs(b.r - a.r));
+    gl_FragColor = vec4(h, max(mix(a.g, b.g, m), front * 0.94), 0.0, 1.0);
+  }` });
+
+// ---------- 火花与金滴 ----------
+const NSP = 1400, spP = new Float32Array(NSP * 3), spV = new Float32Array(NSP * 3), spL = new Float32Array(NSP);
+const spGeo = new THREE.BufferGeometry();
+spGeo.setAttribute('position', new THREE.BufferAttribute(spP, 3).setUsage(THREE.DynamicDrawUsage));
+spGeo.setAttribute('aL', new THREE.BufferAttribute(spL, 1).setUsage(THREE.DynamicDrawUsage));
+const spMat = new THREE.ShaderMaterial({
+  uniforms: { uS: { value: 120 } },
+  vertexShader: `attribute float aL; uniform float uS; varying float vL;
+    void main() { vL = aL; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * mv; gl_PointSize = aL > 0.0 ? uS * (0.4 + aL) / -mv.z : 0.0; }`,
+  fragmentShader: `varying float vL;
+    void main() { float d = length(gl_PointCoord - 0.5); float a = smoothstep(0.5, 0.0, d) * vL;
+      vec3 c = mix(vec3(1.0, 0.25, 0.02), vec3(1.0, 0.92, 0.7), vL) * (2.0 + 4.0 * vL); gl_FragColor = vec4(c * a, a); }`,
+  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+});
+const sparks = new THREE.Points(spGeo, spMat); sparks.frustumCulled = false; scene.add(sparks);
+let spHead = 0;
+function burst(x, y, z, n, pow = 1) {
+  for (let s = 0; s < n; s++) {
+    const i = spHead = (spHead + 1) % NSP, a = Math.random() * 6.283, sp = (1.5 + Math.random() * 3.5) * pow;
+    spP.set([x, y + 0.05, z], i * 3); spV.set([Math.cos(a) * sp * 0.6, (2.5 + Math.random() * 4) * pow, Math.sin(a) * sp * 0.6], i * 3); spL[i] = 0.7 + Math.random() * 0.3;
+  }
+}
+function stepSparks(dt) {
+  for (let i = 0; i < NSP; i++) {
+    if (spL[i] <= 0) continue;
+    spV[i * 3 + 1] -= 9.8 * dt;
+    for (let c = 0; c < 3; c++) spP[i * 3 + c] += spV[i * 3 + c] * dt;
+    if (spP[i * 3 + 1] < 0) { spP[i * 3 + 1] = 0; spV[i * 3 + 1] *= -0.3; }
+    spL[i] -= dt / 1.3;
+  }
+  spGeo.attributes.position.needsUpdate = spGeo.attributes.aL.needsUpdate = true;
+}
+const dropMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(1.0, 0.72, 0.3), metalness: 1, roughness: 0.12, envMap, emissive: new THREE.Color(1.0, 0.55, 0.15), emissiveIntensity: 1.6 });
+const dropGeo = new THREE.SphereGeometry(0.34, 32, 20);
+const falling = [];
+function dropAt(x, z, onHit) { const m = new THREE.Mesh(dropGeo, dropMat); m.position.set(x, 18, z); m.scale.set(0.8, 1.4, 0.8); scene.add(m); falling.push({ m, v: 0, onHit }); }
+function stepDrops(dt) {
+  for (let i = falling.length - 1; i >= 0; i--) {
+    const f = falling[i]; f.v += 22 * dt; f.m.position.y -= f.v * dt;
+    if (f.m.position.y <= 0.2) { const { x, z } = f.m.position; ripple(x, z, 1.2, 0.5); burst(x, 0.1, z, 70); scene.remove(f.m); falling.splice(i, 1); f.onHit && f.onHit(); }
+  }
+}
+// 倾注金流（开场）
+const pour = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.12, 18, 18, 1, true), new THREE.MeshBasicMaterial({ color: new THREE.Color(1.0, 0.68, 0.3).multiplyScalar(3.2) }));
+pour.position.set(0, 9, -2); scene.add(pour);
+
+// ---------- 推演轨迹 ----------
+const barXY = (k, n, z0) => [(k - (n - 1) / 2) * (n === 5 ? 4.6 : 3.3), z0];
+const tonsH = v => v / 210 * 0.9 * HS;
+const fanGeo = new THREE.BufferGeometry();
+{
+  const pos = [];
+  SWEEP.forEach((r, idx) => {
+    if (idx % 25) return;
+    const pts = [[barXY(NY - 1, 10, 0)[0], tonsH(D.volume[NY - 1])], ...r.map((s, i) => [barXY(NY + i, 10, 0)[0], tonsH(s.V)])];
+    for (let i = 0; i < pts.length - 1; i++) pos.push(pts[i][0], pts[i][1] + 0.12, 0, pts[i + 1][0], pts[i + 1][1] + 0.12, 0);
+  });
+  fanGeo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+}
+const fanN = fanGeo.attributes.position.count;
+const fan = new THREE.LineSegments(fanGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(1.0, 0.82, 0.55).multiplyScalar(1.6), transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+fan.frustumCulled = false; scene.add(fan);
+let pathTube = null;
+function buildPath(z0, s = 1) {
+  if (pathTube) { scene.remove(pathTube); pathTube.geometry.dispose(); }
+  const r = RUN[scen], pts = [[barXY(NY - 1, 10, z0)[0], tonsH(D.volume[NY - 1]) * s], ...r.map((q, i) => [barXY(NY + i, 10, z0)[0], tonsH(q.V) * s])];
+  const curve = new THREE.CatmullRomCurve3(pts.map(([x, y]) => new THREE.Vector3(x, y + 0.14, z0)));
+  pathTube = new THREE.Mesh(new THREE.TubeGeometry(curve, 160, 0.055, 8), new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 0.94, 0.82).multiplyScalar(3), transparent: true, opacity: 0 }));
+  pathTube.userData.n = pathTube.geometry.index.count; pathTube.geometry.setDrawRange(0, 0); scene.add(pathTube);
+}
+
+// ---------- 辉光后期 ----------
+const rtMain = new THREE.WebGLRenderTarget(4, 4, { type: THREE.HalfFloatType, samples: 2 });
+const LV = 5, bl = [];
+for (let l = 0; l < LV; l++) bl.push([0, 1].map(() => new THREE.WebGLRenderTarget(4, 4, rtOpt)));
+const brightMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: QV,
+  fragmentShader: `uniform sampler2D t; varying vec2 vUv; void main() { vec3 c = texture2D(t, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(1.1, 3.0, l), 1.0); }` });
+const blurMat = new THREE.ShaderMaterial({ uniforms: { t: { value: null }, dir: { value: new THREE.Vector2() } }, vertexShader: QV,
+  fragmentShader: `uniform sampler2D t; uniform vec2 dir; varying vec2 vUv;
+    void main() { vec3 c = texture2D(t, vUv).rgb * 0.227;
+      c += (texture2D(t, vUv + dir * 1.385).rgb + texture2D(t, vUv - dir * 1.385).rgb) * 0.316;
+      c += (texture2D(t, vUv + dir * 3.231).rgb + texture2D(t, vUv - dir * 3.231).rgb) * 0.07; gl_FragColor = vec4(c, 1.0); }` });
+const compMat = new THREE.ShaderMaterial({
+  uniforms: { t: { value: rtMain.texture }, b0: { value: null }, b1: { value: null }, b2: { value: null }, b3: { value: null }, b4: { value: null }, uT: { value: 0 }, uRes: { value: new THREE.Vector2() }, uC: { value: new THREE.Vector2(.5, .5) } },
+  vertexShader: QV,
+  fragmentShader: `uniform sampler2D t, b0, b1, b2, b3, b4; uniform float uT; uniform vec2 uRes, uC; varying vec2 vUv;
+    vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+    void main() {
+      vec3 c = texture2D(t, vUv).rgb;
+      vec3 b = texture2D(b0, vUv).rgb * 0.5 + texture2D(b1, vUv).rgb * 0.6 + texture2D(b2, vUv).rgb * 0.7 + texture2D(b3, vUv).rgb * 0.8 + texture2D(b4, vUv).rgb * 0.9;
+      c += b * 0.34;
+      c += vec3(0.018, 0.010, 0.004) * smoothstep(0.75, 0.0, distance(vUv * vec2(1.6, 1.0), uC * vec2(1.6, 1.0)));
+      c = aces(c * 0.92);
+      c = pow(c, vec3(1.0 / 2.2));
+      c *= mix(0.55, 1.0, smoothstep(1.1, 0.35, length((vUv - 0.5) * vec2(1.25, 1.0))));
+      c += (fract(sin(dot(vUv * uRes + uT, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.018;
+      gl_FragColor = vec4(c, 1.0);
+    }`,
+});
+function pass(mat, target) { quad.material = mat; R.setRenderTarget(target); R.render(qScene, qCam); }
+function renderFrame() {
+  pass(hMat, rtH);
+  R.setRenderTarget(rtMain); R.render(scene, cam);
+  brightMat.uniforms.t.value = rtMain.texture; pass(brightMat, bl[0][0]);
+  for (let l = 0; l < LV; l++) {
+    const [a, b] = bl[l], src = l === 0 ? a : bl[l - 1][0];
+    blurMat.uniforms.t.value = src.texture; blurMat.uniforms.dir.value.set(1 / src.width, 0); pass(blurMat, b);
+    blurMat.uniforms.t.value = b.texture; blurMat.uniforms.dir.value.set(0, 1 / b.height); pass(blurMat, a);
+  }
+  bl.forEach((p, l) => compMat.uniforms['b' + l].value = p[0].texture);
+  pass(compMat, null);
+}
+
+// ===================== 数据铸形 =====================
+const ix = x => (x + PW / 2) / PW * TW, jz = z => (PD / 2 - z) / PD * TH;
+const xi = i => (i + 0.5) / TW * PW - PW / 2, zj = j => PD / 2 - (j + 0.5) / TH * PD;
+const span = (a, b, n) => [Math.max(0, Math.floor(Math.min(a, b))), Math.min(n - 1, Math.ceil(Math.max(a, b)))];
+const heatP = p => Math.max(0, Math.min(1, (p - 400) / 600));
+function blank() { return new Float32Array(TW * TH * 2); }
+function put(f, k, h, t) { if (h > f[k]) f[k] = h; if (t > f[k + 1]) f[k + 1] = t; }
+function bar(f, cx, cz, hx, hz, h, heat, bev = 0.55, r = 0.3) {
+  const [i0, i1] = span(ix(cx - hx), ix(cx + hx), TW), [j0, j1] = span(jz(cz + hz), jz(cz - hz), TH);
+  for (let j = j0; j <= j1; j++) { const z = zj(j);
+    for (let i = i0; i <= i1; i++) { const x = xi(i);
+      const qx = Math.abs(x - cx) - (hx - r), qz = Math.abs(z - cz) - (hz - r);
+      const sd = Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - r;
+      if (sd > 0) continue;
+      let p = Math.min(1, -sd / bev); p = p * p * (3 - 2 * p);
+      put(f, (j * TW + i) * 2, h * p, heat * Math.sqrt(p));
+    } }
+}
+function dome(f, cx, cz, r, h, heat) {
+  const [i0, i1] = span(ix(cx - r), ix(cx + r), TW), [j0, j1] = span(jz(cz + r), jz(cz - r), TH);
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const d = Math.hypot(xi(i) - cx, zj(j) - cz) / r; if (d >= 1) continue;
+    const p = Math.sqrt(1 - d * d); put(f, (j * TW + i) * 2, h * p, heat * p);
+  }
+}
+function seg(f, x0, z0, x1, z1, w, h, heat, add) {
+  const [i0, i1] = span(ix(Math.min(x0, x1) - w), ix(Math.max(x0, x1) + w), TW), [j0, j1] = span(jz(Math.max(z0, z1) + w), jz(Math.min(z0, z1) - w), TH);
+  const dx = x1 - x0, dz = z1 - z0, L2 = dx * dx + dz * dz;
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+    const x = xi(i), z = zj(j), t = Math.max(0, Math.min(1, ((x - x0) * dx + (z - z0) * dz) / L2));
+    const d = Math.hypot(x - x0 - t * dx, z - z0 - t * dz); if (d >= w) continue;
+    let p = 1 - d / w; p = p * p * (3 - 2 * p); const k = (j * TW + i) * 2;
+    if (add) f[k] += h * p; else put(f, k, h * p, heat * p);
+  }
+}
+const RX0 = -14, RX1 = 14, RZ = -1.2, RSIG = 2.4;
+const smooth = daily.map((_, i) => { let s = 0, n = 0; for (let k = Math.max(0, i - 6); k <= Math.min(ND - 1, i + 6); k++) { s += daily[k][1]; n++; } return s / n; });
+const ridgeX = d => RX0 + (RX1 - RX0) * d / (ND - 1);
+const ridgeH = p => 0.04 + (p - 200) / (pMax - 200) * 0.92;
+const FORM = {
+  flat() { return blank(); },
+  core() { const f = blank(); dome(f, CORE[0], CORE[1], 1.9, 0.32, 0.97); bar(f, CORE[0], CORE[1], 2.6, 2.6, 0.06, 0, 0.4, 2.6); return f; },
+  ridge() {
+    const f = blank(), [i0, i1] = span(ix(RX0), ix(RX1), TW), [j0, j1] = span(jz(RZ + RSIG * 2.6), jz(RZ - RSIG * 2.6), TH);
+    for (let i = i0; i <= i1; i++) {
+      const d = Math.round((xi(i) - RX0) / (RX1 - RX0) * (ND - 1)), p = smooth[Math.max(0, Math.min(ND - 1, d))], crest = ridgeH(p), ht = heatP(p);
+      const fall = Math.min(1, (xi(i) - RX0) / 1.2, (RX1 - xi(i)) / 1.2);
+      for (let j = j0; j <= j1; j++) { const u = (zj(j) - RZ) / RSIG, g = Math.exp(-u * u) * fall; put(f, (j * TW + i) * 2, crest * g, ht * Math.pow(g, 0.6)); }
+    }
+    for (let y = Y0 - 5; y <= YL; y++) { const d = daily.findIndex(x => x[0] >= y + '-01'); if (d > 0) seg(f, ridgeX(d), RZ + 4.6, ridgeX(d), RZ + 5.2, 0.06, -0.012, 0, true); }
+    return f;
+  },
+  bars5() {
+    const f = blank();
+    D.volume.forEach((v, k) => { const [x, z] = barXY(k, 5, 0); bar(f, x, z, 1.5, 2.2, v / 210 * 1.25, heatP(D.price[k])); });
+    return f;
+  },
+  plaque() {
+    const f = blank(), { px, pz } = FORM.plaque;
+    for (let p = 400; p <= 1000; p += 100) seg(f, px(p), pz(450), px(p), pz(1000), 0.045, -0.014, 0, true);
+    for (let s = 500; s <= 1000; s += 100) seg(f, px(350), pz(s), px(1050), pz(s), 0.045, -0.014, 0, true);
+    seg(f, px(360), pz(rA + rB * 360), px(1040), pz(rA + rB * 1040), 0.16, 0.05, 0.7, false);
+    D.price.forEach((p, k) => dome(f, px(p), pz(sales[k]), 0.4 + Math.sqrt(D.volume[k] / 210) * 0.7, 0.3, heatP(p)));
+    return f;
+  },
+  bars10(key, z0 = 0, s = 1) {
+    const f = blank(), r = RUN[key];
+    for (let k = 0; k < 10; k++) {
+      const fut = k >= NY, v = fut ? r[k - NY].V : D.volume[k], p = fut ? r[k - NY].P : D.price[k], [x] = barXY(k, 10, z0);
+      bar(f, x, z0, 1.2 * s, 1.8 * s, v / 210 * 0.9 * s, heatP(p), 0.42 * s, 0.22);
+    }
+    return f;
+  },
+  final(key) { return this.bars10(key); },
+};
+FORM.plaque.px = p => -6 + (p - 350) / 700 * 18; FORM.plaque.pz = s => 4.5 - (s - 450) / 550 * 9;
+
+let morphDur = 2.8;
+function cast(f, dur = 2.8, instant = false) {
+  const m = U.uMix.value;
+  if (instant) { bufA.set(f); bufB.set(f); U.uMix.value = 1; }
+  else {
+    if (m >= 1) bufA.set(bufB);
+    else for (let i = 0; i < TW; i++) { const w = Math.min(1, Math.max(0, m * 1.7 - (i + 0.5) / TW * 0.7)), e = w * w * (3 - 2 * w);
+      if (e === 0) continue; for (let j = 0; j < TH; j++) { const k = (j * TW + i) * 2; bufA[k] += (bufB[k] - bufA[k]) * e; bufA[k + 1] += (bufB[k + 1] - bufA[k + 1]) * e; } }
+    bufB.set(f); U.uMix.value = 0;
+  }
+  morphDur = dur; texA.needsUpdate = texB.needsUpdate = true;
+}
+
+// ===================== 章节 =====================
+const SRC = [
+  { n: '上海黄金交易所 Au99.99 日K', v: `${D.kCount.toLocaleString()} 条`, rec: D.kCount, at: [-8.5, 0.6] },
+  { n: '辖区企业销售台账', v: `${D.firmCount} 户 × ${NY} 年`, rec: D.firmCount * NY, at: [-5, 5.2] },
+  { n: '新晋品牌明细', v: `${D.newcomers.length} 户`, rec: D.newcomers.length, at: [0, 3.4] },
+  { n: '二所工作材料', v: '4 项指标', rec: 4, at: [5.2, 6] },
+  { n: '黄金税收新政（2025.11）', v: '口径标注', rec: 1, at: [9.6, 2.4] },
+  { n: '宏观研判背景（需求方提供）', v: '2 项', rec: 2, at: [13.2, -1.6] },
+];
+const CORE = [2.5, -2.2];
+const PLAN = ['社会消费品零售总额', '豫园商圈客流', '婚庆登记', '品牌金饰挂牌价', '海关黄金进出口', '消费舆情'];
+const REC_SRC = SRC.reduce((s, x) => s + x.rec, 0);
+const CH = [
+  { key: 'title', cam: [0, 9, 30], tgt: [0, 1.2, -3], cx: .5, cy: .7, form: () => FORM.flat() },
+  { key: 'src', name: '信息源接入', dur: 11, cam: [2.5, 17, 27], tgt: [2.5, 0, -0.5], cx: .4, cy: .6, form: () => FORM.core(),
+    head: '多源数据实时接入研判引擎',
+    nums: [{ v: D.kCount, f: thou, l: '个交易日金价行情' }, { v: REC_SRC, f: thou, l: '条记录完成校验', cool: 1 }],
+    sub: `${SRC.length} 类信息源已接入并通过校验，另有 ${PLAN.length} 类完成适配，二期接入。`,
+    log: SRC.map(s => [`接入 ${s.n}`, s.v]).concat([['数据校验', '通过']]) },
+  { key: 'price', name: '金价十年', dur: 9, cam: [-1, 12, 33], tgt: [0.5, 1.2, -1.2], cx: .32, cy: .57, form: () => FORM.ridge(),
+    head: `十年间，金价涨到 ${rise10.toFixed(1)} 倍`,
+    nums: [{ v: priceUp * 100, f: x => '+' + Math.round(x) + '%', l: `${Y0}→${YL} 年均金价` }, { v: pMax, f: thou, l: `历史最高 元/克（${daily[pMaxI][0]}）`, cool: 1 }],
+    sub: '金价越高，金属越炽热。',
+    log: [['构建 Au99.99 日K 序列', `${daily[0][0]} 起`], ['计算年均金价', `${Math.round(D.price[0])} → ${Math.round(P0)} 元/克`], ['识别历史高点', `${thou(pMax)} 元/克`]] },
+  { key: 'bars', name: '量价拆解', dur: 10, cam: [0, 11.5, 26.5], tgt: [0, 1.5, 0], cx: .4, cy: .62, form: () => FORM.bars5(),
+    head: '金价越涨，买的金子越少',
+    nums: [{ v: priceUp * 100, f: x => '+' + Math.round(x) + '%', l: '年均金价' }, { v: volLeft * 100, f: x => Math.round(x) + '%', l: `克重消费只剩 ${Y0} 年的`, cool: 1 }],
+    sub: '每块金锭的体量是当年克重消费（销售额 ÷ 年均金价，粗估），炽热程度是当年金价。',
+    log: [['量价拆解 克重 = 销售额 ÷ 金价', '']].concat(D.years.map((y, k) => [`${yLab(k)}  ${yi(D.salesAnnual[k])} 亿 ÷ ${Math.round(D.price[k])}`, `${Math.round(D.volume[k])} 吨`])) },
+  { key: 'corr', name: '相关性验证', dur: 9, cam: [3, 25, 13.5], tgt: [3, 0, -0.4], cx: .4, cy: .645, form: () => FORM.plaque(),
+    head: '金价越高，销售额越低',
+    nums: [{ v: D.r, f: x => sgn(x, 3), l: '相关系数 r，强负相关' }, { v: EPS, f: x => sgn(x, 2), l: '价格弹性 ε', cool: 1 }],
+    sub: `金价每上涨 1%，克重消费约减少 ${Math.abs(EPS).toFixed(2)}%。基于 ${Y0}–${YL} 年 ${NY} 个年度。`,
+    log: [['Pearson r（年均金价, 年度销售额）', sgn(D.r, 3)], ['回归 ln(克重) ~ ln(金价)', `ε = ${sgn(EPS, 3)}`], ['判定', Math.abs(D.r) >= .8 ? '强负相关' : '中等相关']] },
+  { key: 'turn', name: '拐点', dur: 8, cam: [4.5, 7.6, 13], tgt: [10.5, 2.5, -1.2], cx: .4, cy: .57, form: () => FORM.ridge(),
+    head: '金价已从高位回落',
+    nums: [{ v: fromPeak * 100, f: x => sgn(x, 0) + '%', l: `较 ${D.peak[0].slice(0, 4)} 年 ${+D.peak[0].slice(5)} 月月均峰值` }, { v: D.lastClose, f: thou, l: `${+D.lastDate.slice(5, 7)} 月 ${+D.lastDate.slice(8)} 日收盘 元/克`, cool: 1 }],
+    sub: '高金价对黄金消费的抑制正在减弱，消费意愿具备修复条件。',
+    log: [['月均峰值', `${D.peak[0]}  ${D.peak[1].toFixed(1)}`], ['最新收盘', `${D.lastDate}  ${D.lastClose.toFixed(1)}`], ['较峰值', pct(fromPeak)], ['预测起点（当月月均）', `${D.nowPrice.toFixed(1)} 元/克`]] },
+  { key: 'sim', name: '实时推演', dur: 12, cam: [6, 12.5, 31], tgt: [3.6, 1.0, 0], cx: .36, cy: .58, form: () => FORM.bars10(scen),
+    head: '消费修复，销售额回升',
+    nums: [{ v: RUN.base[0].gr * 100, f: x => '+' + x.toFixed(1) + '%', l: `${FY[0]} 年销售额（基准）` }, { v: RUN.base[1].gr * 100, f: x => '+' + x.toFixed(1) + '%', l: `${FY[1]} 年销售额（基准）`, cool: 1 }],
+    sub: `引擎推演 ${SWEEP.length.toLocaleString()} 组金价走势与修复速度组合，${Math.round(upShare * 100)}% 指向 ${FY[0]}、${FY[1]} 年连续增长。`,
+    log: [['部分调整模型 S* = S₂₀₂₆·(P/P₂₀₂₆)^(1+ε)', ''], ['参数空间 g × λ', '100 × 100'], ['推演完成', `${SWEEP.length.toLocaleString()} 组`],
+      [`${FY[0]} 年增速区间`, `${pct(g27[0])} ~ ${pct(g27[g27.length - 1])}`], ['基准 g = −3%  λ = 0.4', `${pct(RUN.base[0].gr)}  ${pct(RUN.base[1].gr)}`]] },
+  { key: 'final', name: '研判结论', dur: 0, cam: [2, 14, 35], tgt: [1.6, 1.0, 0], cx: .37, cy: .58, form: () => FORM.final(scen) },
+];
+const LAST = CH.length - 1;
+
+// ---------- 信息源链路 ----------
+const linkMat = () => new THREE.ShaderMaterial({ uniforms: { uT: { value: 0 }, uOp: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform float uT, uOp; varying vec2 vUv;
+    void main() { float p = fract(vUv.x * 2.5 - uT * 0.9); float pulse = smoothstep(0.0, 0.08, p) * smoothstep(0.3, 0.08, p);
+      gl_FragColor = vec4(vec3(1.0, 0.78, 0.45) * (0.5 + 4.0 * pulse) * uOp, uOp); }` });
+const links = SRC.map(s => {
+  const a = new THREE.Vector3(s.at[0], 0.15, s.at[1]), b = new THREE.Vector3(CORE[0], 0.9, CORE[1]), m = a.clone().lerp(b, 0.5); m.y = 1.6;
+  const mesh = new THREE.Mesh(new THREE.TubeGeometry(new THREE.QuadraticBezierCurve3(a, m, b), 80, 0.045, 6), linkMat());
+  const node = new THREE.Mesh(dropGeo, dropMat); node.position.copy(a).setY(0.02); node.scale.set(0.9, 0.35, 0.9);
+  mesh.visible = node.visible = false; scene.add(mesh, node); return { mesh, node, on: false };
+});
+
+// ---------- 3D 标签 ----------
+const TAGS = $('tags'); let tags = [];
+function setTags(list) {
+  tags.forEach(t => { t.el.classList.remove('on'); setTimeout(() => t.el.remove(), 700); });
+  tags = list.map(([p, html, cls, delay = 0]) => {
+    const el = document.createElement('div'); el.className = 'tag'; el.innerHTML = `<div class="${cls}">${html}</div>`; TAGS.append(el);
+    const t = { el, v: new THREE.Vector3(...p) }; t.timer = setTimeout(() => el.classList.add('on'), 80 + delay * 1000); return t;
+  });
+}
+function addTag(p, html, cls) {
+  const el = document.createElement('div'); el.className = 'tag'; el.innerHTML = `<div class="${cls}">${html}</div>`; TAGS.append(el);
+  tags.push({ el, v: new THREE.Vector3(...p) }); requestAnimationFrame(() => el.classList.add('on'));
+}
+const srcTag = s => [[s.at[0], 0.4, s.at[1]], `${s.n}<small>${s.v}</small>`, 'src'];
+function tagsFor(k) {
+  const L = [];
+  if (k === 'price' || k === 'turn') {
+    for (let y = k === 'turn' ? YL - 1 : Y0 - 5; y <= YL; y++) { const d = daily.findIndex(x => x[0] >= y + '-01'); if (d > 0) L.push([[ridgeX(d), 0, RZ + 5.4], y, 'yr', 1.2]); }
+    if (k === 'price') L.push([[ridgeX(pMaxI), ridgeH(pMax) * HS + 0.1, RZ], `<b>${thou(pMax)}</b> 元/克<small>${daily[pMaxI][0]} 历史最高</small>`, 'up', 2.6],
+      [[ridgeX(0) + 1.2, ridgeH(daily[0][1]) * HS, RZ], `<b>${thou(daily[0][1])}</b> 元/克<small>${daily[0][0]}</small>`, 'up', 1.6]);
+    else { const pi = daily.findIndex(d => d[0] >= D.peak[0] + '-15');
+      L.push([[ridgeX(pi), ridgeH(daily[pi][1]) * HS + 0.1, RZ], `${D.peak[0]} 月均峰值<br><b>${thou(D.peak[1])}</b> 元/克`, 'lf big', 1.4],
+        [[ridgeX(ND - 1), ridgeH(D.lastClose) * HS, RZ], `${D.lastDate} 收盘<br><b>${thou(D.lastClose)}</b> 元/克　<b>${pct(fromPeak, 0)}</b>`, 'rt big', 2.4]); }
+  }
+  if (k === 'bars') D.volume.forEach((v, kk) => { const [x] = barXY(kk, 5, 0);
+    L.push([[x, 0, 2.6], yLab(kk), 'yr', 1 + kk * .25], [[x, tonsH(v) / 0.9 * 1.25 + 0.15, 0], `<b>${Math.round(v)}</b> 吨<small>${Math.round(D.price[kk])} 元/克</small>`, 'up', 2.2 + kk * .3]); });
+  if (k === 'corr') {
+    const { px, pz } = FORM.plaque;
+    D.price.forEach((p, kk) => L.push([[px(p), 0.9, pz(sales[kk])], `<b>${yLab(kk)}</b><small>${Math.round(p)} 元/克　${sales[kk].toFixed(0)} 亿元</small>`, 'up', 1.6 + kk * .2]));
+    L.push([[px(1000) + 0.6, 0, pz(450) - 0.6], '年均金价（元/克）→', 'rt', 1], [[px(350), 0, pz(1000) - 0.8], '销售额（亿元）↑', 'ax', 1], [[px(700), 0.4, pz(rA + rB * 700) + 1.1], `<b>r = ${sgn(D.r, 3)}</b>`, 'ax big', 3]);
+  }
+  if (k === 'sim' || k === 'final') {
+    const z0 = 0, s = 1, r = RUN[scen];
+    for (let kk = 0; kk < 10; kk++) {
+      const fut = kk >= NY, v = fut ? r[kk - NY].V : D.volume[kk], [x] = barXY(kk, 10, z0), d = fut ? 2.2 + (kk - NY) * .35 : .6;
+      L.push([[x, 0, z0 + 1.8 * s + 0.5], fut ? FY[kk - NY] : yLab(kk), 'yr' + (fut ? ' fut' : ''), d]);
+      if (kk >= NY - 1) L.push([[x, v / 210 * 0.9 * HS * s + 0.2, z0], fut ? `<b>${pct(r[kk - NY].gr)}</b><small>${Math.round(v)} 吨</small>` : `<b>${Math.round(v)}</b> 吨`, 'up', d + .6]);
+    }
+  }
+  return L;
+}
+
+// ---------- 引擎面板 ----------
+$('asof').textContent = `数据截至 ${D.lastDate}`;
+$('srcs').innerHTML = SRC.map(s => `<li><i></i><span>${s.n}</span><b>${s.v}</b></li>`).join('');
+$('plan').innerHTML = '二期接入（已适配）' + PLAN.map(n => `<i>${n}</i>`).join('');
+const srcEls = [...$('srcs').children];
+let rec = 0, simN = 0, recShown = 0, simShown = 0;
+function srcOn(i, flash) { const el = srcEls[i]; if (!el.classList.contains('on')) { el.classList.add('on'); rec += SRC[i].rec; } if (flash) { el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); } }
+function srcReset() { srcEls.forEach(e => e.classList.remove('on')); rec = 0; }
+// ---------- 流式逐字输出：不规则节奏 ----------
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches, PUNCT = '，。：；、！？,;:）)→';
+function beat(ch, sp) {
+  if (PUNCT.includes(ch)) return (150 + Math.random() * 300) * sp;
+  if (/[0-9.,%+−]/.test(ch)) return (10 + Math.random() * 24) * sp;
+  const r = Math.random();
+  if (r < 0.07) return (220 + Math.random() * 460) * sp;
+  if (r < 0.27) return (6 + Math.random() * 12) * sp;
+  return (28 + Math.random() * 74) * sp;
+}
+function stream(el, html, { speed = 1, caret = true, tok, done } = {}) {
+  const parts = html.match(/<[^>]+>|&[a-z#0-9]+;|[\s\S]/g) || [], live = () => !tok || tok();
+  if (RM) { el.innerHTML = html; done && done(); return; }
+  let i = 0, out = '';
+  const step = () => {
+    if (!live()) return;
+    let n = Math.random() < 0.7 ? 1 : Math.random() < 0.65 ? 2 : 3, last = '';
+    while (n > 0 && i < parts.length) { const p = parts[i++]; out += p; if (p[0] !== '<') { n--; last = p; } }
+    if (i < parts.length) { el.innerHTML = out + (caret ? '<span class="caret"></span>' : ''); setTimeout(step, beat(last, speed)); }
+    else { el.innerHTML = out + (caret ? '<span class="caret end"></span>' : ''); done && done(); }
+  };
+  el.innerHTML = caret ? '<span class="caret"></span>' : '';
+  setTimeout(step, (120 + Math.random() * 260) * speed);
+}
+
+let logTok = 0;
+function logLine(l, old) { const li = document.createElement('li'); if (old) li.className = 'old'; li.innerHTML = `<span>${old ? l[0] : ''}</span><b>${old ? l[1] : ''}</b>`; return li; }
+function runLog(i, instant) {
+  const tok = ++logTok, ol = $('log'); ol.innerHTML = '';
+  for (let c = 1; c < i; c++) (CH[c].log || []).slice(-3).forEach(l => ol.append(logLine(l, true)));
+  const L = CH[i].log || [];
+  if (instant) { L.forEach(l => { const li = logLine(l, true); li.className = ''; ol.append(li); }); return; }
+  let n = 0;
+  const live = () => tok === logTok;
+  const next = () => {
+    if (!live() || n >= L.length) return;
+    const l = L[n++], li = logLine(l, false), sp = li.firstChild, b = li.lastChild; ol.append(li);
+    stream(sp, l[0], { speed: 0.42, tok: live, done: () => {
+      sp.querySelector('.caret')?.remove();
+      if (!l[1]) return setTimeout(next, 140 + Math.random() * 300);
+      b.textContent = '运算中'; b.className = 'w';
+      setTimeout(() => { if (!live()) return; b.className = ''; stream(b, l[1], { speed: 0.3, caret: false, tok: live, done: () => setTimeout(next, 160 + Math.random() * 380) }); }, 240 + Math.random() * 700);
+    } });
+  };
+  setTimeout(next, CH[i].key === 'src' ? 900 : 500);
+}
+
+// ---------- AI 推理管线（2D） ----------
+const STAGE = { title: -1, src: 0, price: 1, bars: 1, corr: 2, turn: 2, sim: 3, final: 5 };
+const LAYERS = ['多源数据', '特征工程', '弹性建模', '情景推演', '研判结论'];
+const cv = {};
+function fitCanvas(id, w, h) {
+  const el = $(id), d = Math.min(devicePixelRatio, 2) * Math.min(innerWidth / 1920, innerHeight / 1080);
+  el.width = Math.round(w * d); el.height = Math.round(h * d); const g = el.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); cv[id] = { g, w, h };
+}
+const pulses = [];
+function drawDag(now) {
+  const { g, w, h } = cv.dag, st = STAGE[CH[ch].key], t = now / 1000;
+  g.clearRect(0, 0, w, h);
+  const xs = LAYERS.map((_, i) => 32 + i * (w - 64) / 4), ys = [12, 28, 44, 60];
+  const bz = (x0, x1, a, b, u) => [(1 - u) ** 3 * x0 + 3 * (1 - u) ** 2 * u * (x0 + 34) + 3 * (1 - u) * u * u * (x1 - 34) + u ** 3 * x1, (1 - u) ** 3 * a + 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u * u * b + u ** 3 * b];
+  g.lineWidth = 1;
+  for (let i = 0; i < 4; i++) {
+    g.strokeStyle = i < st ? 'rgba(242, 182, 64, .2)' : 'rgba(244, 235, 221, .05)';
+    for (const a of ys) for (const b of ys) { g.beginPath(); g.moveTo(xs[i], a); g.bezierCurveTo(xs[i] + 34, a, xs[i + 1] - 34, b, xs[i + 1], b); g.stroke(); }
+  }
+  const lim = Math.min(st, 4);
+  if (lim > 0) for (let n = 0; n < 2; n++) pulses.push({ i: Math.floor(Math.random() * lim), a: ys[Math.random() * 4 | 0], b: ys[Math.random() * 4 | 0], p: 0, v: 0.012 + Math.random() * 0.016 });
+  for (let n = pulses.length - 1; n >= 0; n--) {
+    const q = pulses[n]; q.p += q.v; if (q.p >= 1 || q.i >= lim) { pulses.splice(n, 1); continue; }
+    const [x, y] = bz(xs[q.i], xs[q.i + 1], q.a, q.b, q.p);
+    g.fillStyle = `rgba(255, 231, 176, ${Math.sin(q.p * Math.PI)})`; g.beginPath(); g.arc(x, y, 1.7, 0, 7); g.fill();
+  }
+  LAYERS.forEach((lab, i) => {
+    const done = i < st, cur = i === st;
+    ys.forEach((y, j) => {
+      const pu = cur ? 0.5 + 0.5 * Math.sin(t * 4 + j * 1.3) : 0;
+      g.beginPath(); g.arc(xs[i], y, cur ? 3.4 + pu * 1.4 : 3.2, 0, 7);
+      if (done) { g.fillStyle = '#F2B640'; g.fill(); }
+      else if (cur) { g.shadowColor = '#FFB54A'; g.shadowBlur = 12; g.fillStyle = `rgba(255, 231, 176, ${0.55 + 0.45 * pu})`; g.fill(); g.shadowBlur = 0; }
+      else { g.strokeStyle = 'rgba(110, 97, 82, .9)'; g.lineWidth = 1.2; g.stroke(); g.lineWidth = 1; }
+    });
+    g.font = '500 12px SHS, sans-serif'; g.textAlign = 'center'; g.fillStyle = cur ? '#FFE7B0' : done ? '#A69580' : '#6E6152'; g.fillText(lab, xs[i], 88);
+  });
+}
+
+// ---------- 公式推演（符号 → 数值 → 结果） ----------
+const tk = (sym, num) => `<span class="tk" data-n="${num}">${sym}</span>`;
+const fr = (a, b) => `<span class="fr"><span>${a}</span><span>${b}</span></span>`;
+const iv = x => `<i>${x}</i>`;
+const d26 = daily.filter(d => d[0].startsWith(String(YL)) && +d[0].slice(5, 7) <= D.partialMonths), sum26 = d26.reduce((a, d) => a + d[1], 0);
+const cagr = Math.pow(P0 / D.price[0], 1 / (NY - 1)) - 1;
+const lret = []; for (let i = Math.max(1, ND - 252); i < ND; i++) lret.push(Math.log(daily[i][1] / daily[i - 1][1]));
+const lrm = avg(lret), lsd = Math.sqrt(lret.reduce((a, x) => a + (x - lrm) ** 2, 0) / (lret.length - 1)), vol = lsd * Math.sqrt(252);
+const dlnP = Math.log(P0 / D.price[0]), dlnQ = Math.log(D.volume[NY - 1] / D.volume[0]), dlnS = Math.log(D.salesAnnual[NY - 1] / D.salesAnnual[0]);
+const sxy = D.price.reduce((a, x, i) => a + (x - mP) * (sales[i] - mS), 0), sxx = D.price.reduce((a, x) => a + (x - mP) ** 2, 0), syy = sales.reduce((a, y) => a + (y - mS) ** 2, 0);
+const lnP = D.price.map(Math.log), lnQ = D.volume.map(Math.log), mlP = avg(lnP), mlQ = avg(lnQ);
+const covPQ = lnP.reduce((a, x, i) => a + (x - mlP) * (lnQ[i] - mlQ), 0) / (NY - 1), varP = lnP.reduce((a, x) => a + (x - mlP) ** 2, 0) / (NY - 1);
+const P27 = D.nowPrice * (1 + SCEN.base.g), Ss27 = S0 * Math.pow(P27 / P0, 1 + EPS), S27 = RUN.base[0].S, gap0 = D.nowPrice / P0 - 1;
+const Pb = iv('P̄');
+const MATH = {
+  src: { term: '数据治理：时序对齐与年化折算', sub: 'Data Alignment', lines: [
+    { h: `${Pb}<sub>${YL}</sub> = ${fr(tk(`Σ${iv('P')}<sub>t</sub>`, thou(sum26)), tk(iv('n'), d26.length))}`, r: `${P0.toFixed(1)} 元/克` },
+    { h: `${iv('Ŝ')}<sub>${YL}</sub> = ${tk(`${iv('S')}<sub>1–${D.partialMonths}</sub>`, yi(D.salesTotal[NY - 1]))} × ${fr(12, D.partialMonths)}`, r: `${yi(D.salesAnnual[NY - 1])} 亿元` }] },
+  price: { term: '复合年均增长率 · 年化波动率', sub: 'CAGR · σ', lines: [
+    { h: `CAGR = (${fr(tk(`${Pb}<sub>${YL}</sub>`, P0.toFixed(1)), tk(`${Pb}<sub>${Y0}</sub>`, D.price[0].toFixed(1)))})<sup>1/${NY - 1}</sup> − 1`, r: pct(cagr) },
+    { h: `σ = √252 · ${tk(`std(Δln${iv('P')}<sub>t</sub>)`, lsd.toFixed(4))}`, r: (vol * 100).toFixed(1) + '%' }] },
+  bars: { term: '价量分解（对数可加）', sub: 'Price–Volume Decomposition', lines: [
+    { h: `${iv('Q')} = ${fr(tk(iv('S'), yi(D.salesAnnual[NY - 1]) + ' 亿'), tk(Pb, P0.toFixed(1)))}`, r: `${D.volume[NY - 1].toFixed(1)} 吨` },
+    { h: `Δln${iv('S')} = ${tk(`Δln${Pb}`, sgn(dlnP, 3))} + ${tk(`Δln${iv('Q')}`, '(' + sgn(dlnQ, 3) + ')')}`, r: sgn(dlnS, 3) }] },
+  corr: { term: '皮尔逊相关 · 需求价格弹性', sub: 'Pearson r · OLS', lines: [
+    { h: `${iv('r')} = ${fr(tk(`Σ(${iv('x')}−${iv('x̄')})(${iv('y')}−${iv('ȳ')})`, sgn(sxy, 0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')), tk(`√Σ(${iv('x')}−${iv('x̄')})²·Σ(${iv('y')}−${iv('ȳ')})²`, thou(Math.sqrt(sxx * syy))))}`, r: sgn(D.r, 3) },
+    { h: `ε = ${fr(tk(`Cov(ln${iv('P')}, ln${iv('Q')})`, sgn(covPQ, 4)), tk(`Var(ln${iv('P')})`, varP.toFixed(4)))}`, r: sgn(EPS, 3) }] },
+  turn: { term: '峰值回撤 · 预测起点', sub: 'Drawdown', lines: [
+    { h: `DD = ${fr(tk(`${iv('P')}<sub>t</sub>`, D.lastClose.toFixed(1)), tk(`${iv('P')}<sub>peak</sub>`, D.peak[1].toFixed(1)))} − 1`, r: pct(fromPeak) },
+    { h: `${fr(tk(`${iv('P')}<sub>0</sub>`, D.nowPrice.toFixed(1)), tk(`${Pb}<sub>${YL}</sub>`, P0.toFixed(1)))} − 1`, r: pct(gap0) }] },
+  sim: { term: 'Nerlove 局部调整模型 · 敏感性矩阵', sub: `${SWEEP.length.toLocaleString()} scenarios`, lines: [
+    { h: `${iv('S')}*<sub>${FY[0]}</sub> = ${tk(`${iv('S')}<sub>0</sub>`, S0.toFixed(1))}·(${fr(tk(`${iv('P')}<sub>${FY[0]}</sub>`, P27.toFixed(1)), tk(`${iv('P')}<sub>0</sub>`, P0.toFixed(1)))})<sup>${tk('1+ε', sgn(1 + EPS, 3))}</sup>`, r: `${Ss27.toFixed(1)} 亿` },
+    { h: `${iv('S')}<sub>${FY[0]}</sub> = ${tk(`${iv('S')}<sub>0</sub><sup>1−λ</sup>`, `${S0.toFixed(1)}<sup>${(1 - SCEN.base.lam).toFixed(1)}</sup>`)}·${tk(`${iv('S')}*<sup>λ</sup>`, `${Ss27.toFixed(1)}<sup>${SCEN.base.lam}</sup>`)}`, r: `${S27.toFixed(1)} 亿　${pct(RUN.base[0].gr)}` }] },
+};
+let mathTok = 0;
+function setMath(key, instant) {
+  const m = MATH[key], tok = ++mathTok; if (!m) return;
+  $('mSub').textContent = m.sub;
+  if (instant) $('mTerm').textContent = m.term; else stream($('mTerm'), m.term, { speed: 0.55, tok: () => tok === mathTok });
+  $('fx').innerHTML = m.lines.map(l => `<div class="ln">${l.h}<span>=</span><b class="res">${l.r}</b></div>`).join('');
+  [...$('fx').children].forEach((ln, i) => {
+    const at = (ms, fn) => instant ? fn() : setTimeout(() => tok === mathTok && fn(), 500 + i * 2900 + ms);
+    at(0, () => ln.classList.add('on'));
+    ln.querySelectorAll('.tk').forEach((el, j) => at(1150 + j * 170, () => { el.innerHTML = el.dataset.n; el.classList.add('num'); }));
+    at(2050, () => ln.querySelector('.res').classList.add('on'));
+  });
+}
+
+// ---------- 推演可视化（2D） ----------
+const VC = { gold: '#F2B640', hot: '#FFE7B0', ember: '#FF7A33', line: 'rgba(244, 235, 221, .12)', mute: '#A69580' };
+const E3 = x => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+function txt(g, s, x, y, col = VC.mute, al = 'left', size = 11) { g.font = `500 ${size}px Geist, SHS, sans-serif`; g.fillStyle = col; g.textAlign = al; g.fillText(s, x, y); }
+const yAvg = [];
+for (let y = Y0 - 5; y <= YL; y++) { const i0 = daily.findIndex(d => d[0] >= y + '-01'), i1 = daily.findIndex(d => d[0] >= (y + 1) + '-01'); const e = i1 < 0 ? ND : i1; if (i0 >= 0 && e > i0) yAvg.push([y, avg(daily.slice(i0, e).map(d => d[1])), i0, e - 1]); }
+const mAvg = []; { const m = {}; daily.forEach(d => (m[d[0].slice(0, 7)] ||= []).push(d[1])); Object.keys(m).sort().slice(-30).forEach(k => mAvg.push([k, avg(m[k])])); }
+const heat = document.createElement('canvas'); heat.width = heat.height = 100;
+{
+  const gx = heat.getContext('2d'), img = gx.createImageData(100, 100), v = SWEEP.map(r => r[0].gr), lo = Math.min(...v), hi = Math.max(...v);
+  const stops = [[0, [40, 22, 10]], [0.35, [150, 50, 12]], [0.65, [242, 150, 40]], [0.88, [255, 214, 120]], [1, [255, 246, 222]]];
+  for (let a = 0; a < 100; a++) for (let b = 0; b < 100; b++) {
+    const u = (v[a * 100 + b] - lo) / (hi - lo); let c = stops[stops.length - 1][1];
+    for (let s2 = 1; s2 < stops.length; s2++) if (u <= stops[s2][0]) { const [u0, c0] = stops[s2 - 1], [u1, c1] = stops[s2], f = (u - u0) / (u1 - u0); c = c0.map((x, i) => x + (c1[i] - x) * f); break; }
+    const k = ((99 - b) * 100 + a) * 4; img.data.set([c[0], c[1], c[2], 255], k);
+  }
+  gx.putImageData(img, 0, 0); heat.lo = lo; heat.hi = hi;
+}
+const VIZ = {
+  src(g, w, h, T) {
+    const sx = i => 6 + i / (ND - 1) * (w - 12), sy = p => h - 22 - (p - 200) / 1100 * (h - 36), n = Math.floor(ND * E3(T / 2.6));
+    g.strokeStyle = 'rgba(255, 231, 176, .5)'; g.lineWidth = 1; g.beginPath();
+    for (let i = 0; i < n; i++) i ? g.lineTo(sx(i), sy(daily[i][1])) : g.moveTo(sx(i), sy(daily[i][1])); g.stroke();
+    if (n < ND && n > 0) { g.fillStyle = VC.hot; g.beginPath(); g.arc(sx(n - 1), sy(daily[n - 1][1]), 2.5, 0, 7); g.fill(); }
+    yAvg.forEach(([y, a, i0, i1], k) => { const u = E3((T - 2.6 - k * 0.12) / 0.5); if (u <= 0) return;
+      g.strokeStyle = VC.gold; g.globalAlpha = u; g.lineWidth = 2.2; g.beginPath(); g.moveTo(sx(i0), sy(a)); g.lineTo(sx(i0) + (sx(i1) - sx(i0)) * u, sy(a)); g.stroke(); g.globalAlpha = 1; });
+    txt(g, `日K ${ND.toLocaleString()} 条 → 年均价 ${yAvg.length} 个`, 6, h - 4);
+  },
+  price(g, w, h, T) {
+    const xs = k => 26 + k * (w - 70) / (NY - 1), sy = p => h - 24 - (p - 300) / 800 * (h - 40), u = E3(T / 2.2);
+    g.strokeStyle = VC.line; g.lineWidth = 1; [400, 600, 800, 1000].forEach(p => { g.beginPath(); g.moveTo(20, sy(p)); g.lineTo(w - 6, sy(p)); g.stroke(); txt(g, p, w - 4, sy(p) - 3, VC.mute, 'right', 10); });
+    g.strokeStyle = VC.gold; g.lineWidth = 2; g.beginPath();
+    for (let q = 0; q <= 60 * u; q++) { const x = q / 60 * (NY - 1), p = D.price[0] * Math.pow(1 + cagr, x); q ? g.lineTo(xs(x), sy(p)) : g.moveTo(xs(x), sy(p)); } g.stroke();
+    D.price.forEach((p, k) => { const v = E3((T - 0.3 - k * 0.35) / 0.4); if (v <= 0) return; g.globalAlpha = v;
+      g.fillStyle = VC.hot; g.beginPath(); g.arc(xs(k), sy(p), 3.6, 0, 7); g.fill(); txt(g, yLab(k), xs(k), h - 6, VC.mute, 'center'); g.globalAlpha = 1; });
+    if (T > 2.4) txt(g, `CAGR ${pct(cagr)}`, xs(NY - 1) - 8, sy(P0) + 4, VC.gold, 'right', 12);
+  },
+  bars(g, w, h, T) {
+    const y0 = h * 0.38, sc = (h - 50) / 2.2, bw = 64, xs = [54, 172, 290];
+    g.strokeStyle = VC.line; g.beginPath(); g.moveTo(16, y0); g.lineTo(w - 10, y0); g.stroke();
+    const seg = [[0, dlnP, VC.gold, 'ΔlnP̄', 0.3, dlnP], [dlnP, dlnP + dlnQ, VC.ember, 'ΔlnQ', 1.3, dlnQ], [0, dlnS, VC.hot, 'ΔlnS', 2.3, dlnS]];
+    seg.forEach(([a, b, col, lab, t0, dv], i) => { const u = E3((T - t0) / 0.8); if (u <= 0) return; const y1 = y0 - a * sc, y2 = y0 - (a + (b - a) * u) * sc;
+      g.fillStyle = col; g.globalAlpha = 0.9; g.fillRect(xs[i], Math.min(y1, y2), bw, Math.abs(y2 - y1)); g.globalAlpha = 1;
+      if (i === 1) { g.setLineDash([3, 3]); g.strokeStyle = VC.mute; g.beginPath(); g.moveTo(xs[0] + bw, y0 - dlnP * sc); g.lineTo(xs[1], y0 - dlnP * sc); g.stroke(); g.setLineDash([]); }
+      txt(g, `${lab} ${sgn(dv, 3)}`, xs[i] + bw / 2, (b - a) > 0 ? Math.min(y1, y2) - 6 : Math.max(y1, y2) + 14, col, 'center'); });
+  },
+  corr(g, w, h, T) {
+    const x0 = Math.min(...lnP) - 0.08, x1 = Math.max(...lnP) + 0.08, q0 = Math.min(...lnQ) - 0.15, q1 = Math.max(...lnQ) + 0.15;
+    const sx = x => 24 + (x - x0) / (x1 - x0) * (w - 40), sy = q => h - 22 - (q - q0) / (q1 - q0) * (h - 36);
+    const b = EPS * E3((T - 0.6) / 2.4), line = x => mlQ + b * (x - mlP);
+    g.strokeStyle = VC.line; g.strokeRect(20, 8, w - 32, h - 28);
+    if (T > 3.1) { g.setLineDash([2, 3]); g.strokeStyle = 'rgba(255, 122, 51, .7)'; lnP.forEach((x, i) => { g.beginPath(); g.moveTo(sx(x), sy(lnQ[i])); g.lineTo(sx(x), sy(line(x))); g.stroke(); }); g.setLineDash([]); }
+    g.strokeStyle = VC.gold; g.lineWidth = 2; g.beginPath(); g.moveTo(sx(x0), sy(line(x0))); g.lineTo(sx(x1), sy(line(x1))); g.stroke(); g.lineWidth = 1;
+    lnP.forEach((x, i) => { g.fillStyle = VC.hot; g.beginPath(); g.arc(sx(x), sy(lnQ[i]), 3.6, 0, 7); g.fill(); });
+    txt(g, 'ln P', w - 14, h - 8, VC.mute, 'right'); txt(g, 'ln Q', 24, 20);
+    txt(g, `OLS 斜率 ε = ${sgn(b, 3)}`, w - 16, 22, VC.gold, 'right', 12);
+  },
+  turn(g, w, h, T) {
+    const ps = mAvg.map(m => m[1]), lo = Math.min(...ps) - 40, hi = Math.max(...ps) + 40, pk = ps.indexOf(Math.max(...ps));
+    const sx = i => 10 + i / (mAvg.length - 1) * (w - 20), sy = p => h - 20 - (p - lo) / (hi - lo) * (h - 32), n = Math.max(2, Math.floor(mAvg.length * E3(T / 2)));
+    if (T > 2) { g.fillStyle = 'rgba(255, 122, 51, .22)'; g.beginPath(); g.moveTo(sx(pk), sy(ps[pk]));
+      for (let i = pk; i < mAvg.length; i++) g.lineTo(sx(i), sy(ps[i])); g.lineTo(sx(mAvg.length - 1), sy(ps[pk])); g.closePath(); g.fill();
+      g.setLineDash([3, 3]); g.strokeStyle = VC.ember; g.beginPath(); g.moveTo(sx(pk), sy(ps[pk])); g.lineTo(sx(mAvg.length - 1), sy(ps[pk])); g.stroke(); g.setLineDash([]); }
+    g.strokeStyle = VC.hot; g.lineWidth = 1.8; g.beginPath(); for (let i = 0; i < n; i++) i ? g.lineTo(sx(i), sy(ps[i])) : g.moveTo(sx(i), sy(ps[i])); g.stroke(); g.lineWidth = 1;
+    if (n > pk) { g.fillStyle = VC.ember; g.beginPath(); g.arc(sx(pk), sy(ps[pk]), 4, 0, 7); g.fill(); txt(g, `${mAvg[pk][0]} 峰值`, sx(pk) - 6, sy(ps[pk]) - 8, VC.ember, 'right'); }
+    txt(g, mAvg[0][0], 10, h - 4); txt(g, mAvg[mAvg.length - 1][0], w - 10, h - 4, VC.mute, 'right');
+    if (T > 2.4) txt(g, `回撤 ${pct(fromPeak)}`, w - 12, sy(ps[pk]) + 16, VC.gold, 'right', 12);
+  },
+  sim(g, w, h, T) {
+    const x0 = 34, y0 = 6, hw = w - 104, hh = h - 32, cols = CH[ch].key === 'final' ? 100 : Math.min(100, Math.floor(simN / 100));
+    g.imageSmoothingEnabled = true;
+    if (cols > 0) g.drawImage(heat, 0, 0, cols, 100, x0, y0, hw * cols / 100, hh);
+    g.strokeStyle = VC.line; g.strokeRect(x0, y0, hw, hh);
+    if (cols < 100 && cols > 0) { g.fillStyle = VC.hot; g.fillRect(x0 + hw * cols / 100 - 1, y0, 2, hh); }
+    if (cols >= 50) { const bx = x0 + hw * 0.505, by = y0 + hh * (1 - 0.505); g.strokeStyle = 'rgba(255, 255, 255, .85)'; g.beginPath(); g.moveTo(bx - 7, by); g.lineTo(bx + 7, by); g.moveTo(bx, by - 7); g.lineTo(bx, by + 7); g.stroke(); txt(g, '基准', bx + 8, by - 6, VC.hot); }
+    const gx = w - 56, grd = g.createLinearGradient(0, y0 + hh, 0, y0); [[0, '#28160A'], [0.35, '#963210'], [0.65, '#F29628'], [0.88, '#FFD678'], [1, '#FFF6DE']].forEach(([o, c]) => grd.addColorStop(o, c));
+    g.fillStyle = grd; g.fillRect(gx, y0, 8, hh); txt(g, pct(heat.hi), gx + 12, y0 + 9); txt(g, pct(heat.lo), gx + 12, y0 + hh);
+    txt(g, '金价年变动 g：−8% → +2%', x0, h - 6); g.save(); g.translate(14, y0 + hh / 2); g.rotate(-Math.PI / 2); txt(g, '修复速度 λ', 0, 0, VC.mute, 'center'); g.restore();
+  },
+};
+VIZ.final = VIZ.sim;
+function drawViz(T) { const { g, w, h } = cv.viz, f = VIZ[CH[ch].key]; g.clearRect(0, 0, w, h); if (f) f(g, w, h, T); }
+
+// ---------- 叙事 ----------
+let numTok = 0;
+function count(el, to, f, delay, dur = 1500) {
+  const tok = numTok, t0 = performance.now() + delay; el.textContent = f(0);
+  const tick = now => { if (tok !== numTok) return; const u = Math.min(1, Math.max(0, (now - t0) / dur)); el.textContent = f(to * (1 - Math.pow(1 - u, 4))); if (u < 1) requestAnimationFrame(tick); };
+  requestAnimationFrame(tick);
+}
+function narr(c, instant) {
+  const tok = ++numTok, live = () => tok === numTok;
+  $('nums').innerHTML = c.nums.map(n => `<div class="num"><b class="${n.cool ? 'cool' : ''}"></b><span>${n.l}</span></div>`).join('');
+  const nums = () => [...$('nums').children].forEach((el, j) => {
+    setTimeout(() => live() && el.classList.add('on'), instant ? 0 : j * 260);
+    count(el.firstChild, c.nums[j].v, c.nums[j].f, instant ? 0 : j * 260, c.key === 'src' ? 6500 : 1500);
+  });
+  if (instant) { $('head').textContent = c.head; $('sub').textContent = c.sub; nums(); return; }
+  $('sub').textContent = '';
+  stream($('head'), c.head, { tok: live, done: () => { nums(); setTimeout(() => live() && stream($('sub'), c.sub, { speed: 0.7, tok: live }), 700 + Math.random() * 400); } });
+}
+let finTok = 0;
+function finalPanel(instant) {
+  const r = RUN[scen], tok = ++finTok, live = () => tok === finTok;
+  const fh = `预计 ${FY[0]} 年销售额 <b>${pct(r[0].gr)}</b>，${FY[1]} 年 <b>${pct(r[1].gr)}</b>`;
+  const chain = [`金价 ${Y0}→${YL} 年均 <b>+${Math.round(priceUp * 100)}%</b>`, `克重消费降至 <b>${Math.round(volLeft * 100)}%</b>`, `相关系数 <b>${sgn(D.r, 3)}</b>`,
+    `金价自高位回落 <b>${pct(fromPeak, 0)}</b>`, `${SWEEP.length.toLocaleString()} 组推演 <b>${Math.round(upShare * 100)}%</b> 指向增长`];
+  if (instant) { $('fh').innerHTML = fh; $('chain').innerHTML = chain.map(t => `<li>${t}</li>`).join(''); }
+  else {
+    $('chain').innerHTML = '';
+    stream($('fh'), fh, { tok: live, done: () => { let k = 0;
+      const nx = () => { if (!live() || k >= chain.length) return; const li = document.createElement('li'); $('chain').append(li);
+        stream(li, chain[k++], { speed: 0.45, caret: false, tok: live, done: () => setTimeout(nx, 90 + Math.random() * 260) }); };
+      setTimeout(nx, 380); } });
+  }
+  $('scen').innerHTML = Object.entries(SCEN).map(([k, v]) => `<button data-k="${k}" aria-pressed="${k === scen}">${v.name}情景</button>`).join('');
+  $('fy').innerHTML = r.map((x, i) => `<div class="${i < 2 ? 'k' : ''}"><small>${x.y}</small><b>${pct(x.gr)}</b></div>`).join('');
+  $('as').textContent = `${SCEN[scen].note}；当前月均 ${D.nowPrice.toFixed(0)} 元/克（${D.nowMonth}），价格弹性 ε = ${EPS.toFixed(2)}。情景扫描范围：金价年变动 −8%～+1.9%，λ 0.25～0.55。${FY[2]} 年起为趋势外推，仅供参考。`;
+}
+$('scen').addEventListener('click', e => {
+  const k = e.target.closest('button')?.dataset.k; if (!k || k === scen) return;
+  scen = k; finalPanel(false); cast(FORM.final(scen), 1.6); buildPath(0); pathT0 = performance.now() - 400; setTags(tagsFor('final'));
+});
+$('nv').innerHTML = `${(newSum / 1e8).toFixed(2)}<small>亿元</small>`;
+$('np').textContent = `${YL} 年 ${D.newcomers.length} 个新晋品牌销售额，其中${D.newcomers[0].brand}开业当年 ${(D.newcomers[0].sales / 1e8).toFixed(2)} 亿元。`;
+const TSUB = `融合上海黄金交易所 ${D.kCount.toLocaleString()} 个交易日行情、辖区 ${D.firmCount} 户企业销售台账与多类研判信息，实时推演 ${FY[0]}–${FY[1]} 年黄金消费走势`;
+$('note').textContent = `数据：辖区企业销售台账（${YL} 年为 1–${D.partialMonths} 月按 12/${D.partialMonths} 年化，标 *）；上海黄金交易所 Au99.99 日K。克重消费为销售额 ÷ 年均金价粗估。预测基于页面所列假设。`;
+$('steps').innerHTML = CH.slice(1).map((c, i) => `<li><button data-i="${i + 1}"><i></i><b>${i + 1}</b>${c.name}</button></li>`).join('');
+
+// ---------- 状态机 ----------
+let ch = 0, chT = 0, playing = false, tIn = 0, pathT0 = 0, srcFired = 0;
+const ICON = { pause: '<svg viewBox="0 0 16 16"><rect x="3" y="2" width="3.4" height="12" rx="1"/><rect x="9.6" y="2" width="3.4" height="12" rx="1"/></svg>', play: '<svg viewBox="0 0 16 16"><path d="M4 2.2v11.6L13.6 8z"/></svg>' };
+function status() {
+  document.body.classList.toggle('paused', !playing && ch > 0 && ch < LAST);
+  $('st').textContent = ch === 0 ? '待命' : ch === LAST ? '研判完成' : playing ? '实时研判中' : '已暂停';
+  $('pp').innerHTML = playing && ch < LAST ? ICON.pause : ICON.play; $('pp').setAttribute('aria-label', playing && ch < LAST ? '暂停' : '播放');
+}
+function go(i, instant = false) {
+  ch = i; chT = 0; tIn = performance.now() - (instant ? 30000 : 0);
+  const c = CH[i];
+  document.body.classList.toggle('t0', i === 0); document.body.classList.toggle('tf', i === LAST);
+  cast(c.form(), i === LAST ? 3.2 : 2.8, instant);
+  setTags(c.key === 'src' ? (instant ? SRC.map(srcTag) : []) : tagsFor(c.key));
+  if (c.head) { narr(c, instant); runLog(i, instant); }
+  setMath(c.key, instant);
+  if (i === LAST) finalPanel(instant);
+  if (c.key === 'sim' || c.key === 'final') { buildPath(0); pathT0 = performance.now() + (c.key === 'sim' && !instant ? 6500 : 0) - (instant ? 9000 : 0); }
+    srcFired = 0; links.forEach(l => l.on = c.key === 'src' && instant);
+  if (c.key === 'src') { srcReset(); if (instant) { SRC.forEach((_, k) => srcOn(k)); srcFired = SRC.length; } }
+  else if (i > 1) { SRC.forEach((_, k) => srcOn(k)); srcFired = SRC.length; }
+  else srcReset();
+  simN = i > 6 || (c.key === 'sim' && instant) ? SWEEP.length : 0;
+  if (instant) { camP.set(...c.cam); camT.set(...c.tgt); cx = c.cx; cy = c.cy ?? .5; snap = 3; recShown = rec; simShown = simN; }
+  document.querySelectorAll('.steps button').forEach(b => { const k = +b.dataset.i; b.classList.toggle('done', k < i); b.classList.toggle('now', k === i); b.firstChild.style.width = k < i ? '100%' : '0'; });
+  status();
+}
+function start() { if (ch === 0) { playing = true; go(1); } }
+$('go').onclick = start;
+$('pp').onclick = () => { if (ch === LAST) { playing = true; go(1); return; } playing = !playing; status(); };
+$('steps').onclick = e => { const b = e.target.closest('button'); if (b) go(+b.dataset.i); };
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') return sheet(false);
+  if ($('sheet').classList.contains('open')) return;
+  if (e.code === 'Space') { e.preventDefault(); ch === 0 ? start() : $('pp').click(); }
+  else if (e.key === 'ArrowRight' || e.key === 'PageDown') go(Math.min(LAST, ch + 1));
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(Math.max(ch ? 1 : 0, ch - 1));
+  else if (e.key === 'Home') { playing = false; go(0); }
+  else if (e.key.toLowerCase() === 'e') sheet(true);
+  else if (e.key.toLowerCase() === 'd') $('fps').hidden = !$('fps').hidden;
+  else if (e.key.toLowerCase() === 'f') document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+});
+
+// ===================== 帧循环 =====================
+const camP = new THREE.Vector3(...CH[0].cam), camT = new THREE.Vector3(...CH[0].tgt), v3 = new THREE.Vector3();
+let rs = 1, pfT = 0, pfN = 0, pfGood = 0, cx = .5, cy = .5, orbit = 0, snap = 0, mx = 0, my = 0, W = 1, H = 1, last = performance.now(), ambient = 0;
+addEventListener('pointermove', e => { mx = e.clientX / innerWidth - .5; my = e.clientY / innerHeight - .5; });
+function resize() {
+  W = innerWidth; H = innerHeight; const S = Math.min(W / 1920, H / 1080), dpr = Math.min(devicePixelRatio, 1.25) * rs;
+  R.setPixelRatio(dpr); R.setSize(W, H, false);
+  const bw = Math.floor(W * dpr), bh = Math.floor(H * dpr);
+  rtMain.setSize(bw, bh); bl.forEach((p, l) => p.forEach(t => t.setSize(Math.max(1, bw >> (l + 1)), Math.max(1, bh >> (l + 1)))));
+  compMat.uniforms.uRes.value.set(bw, bh); spMat.uniforms.uS.value = 0.09 * bh / (2 * Math.tan(cam.fov * Math.PI / 360));
+  cam.aspect = W / H; cam.updateProjectionMatrix();
+  $('stage').style.transform = `translate(-50%, -50%) scale(${S})`; document.documentElement.style.setProperty('--k', S.toFixed(3));
+  fitCanvas('dag', 400, 96); fitCanvas('viz', 400, 150);
+  Object.values(charts).forEach(c => c.resize());
+}
+addEventListener('resize', resize);
+const ease = (a, b, k) => a + (b - a) * k;
+function frame(now) {
+  const raw = Math.max(0, Math.min(0.5, (now - last) / 1000)), dt = Math.min(0.05, raw); last = now;
+  const c = CH[ch], T = (now - tIn) / 1000, k = snap > 0 ? (snap--, 1) : 1 - Math.exp(-dt * 1.4);
+  // 自适应渲染分辨率：帧率不足时降低 3D 渲染分辨率，富余时逐步恢复
+  pfT += raw; pfN++;
+  if (pfT > 1.5) { const fps = pfN / pfT; pfT = pfN = 0; $('fps').textContent = `${fps.toFixed(0)} fps · ${Math.round(rs * 100)}%`;
+    if (fps < 46 && rs > 0.6) { rs = Math.max(0.6, rs - 0.1); pfGood = 0; resize(); }
+    else if (fps > 57 && rs < 1) { if (++pfGood >= 3) { rs = Math.min(1, rs + 0.1); pfGood = 0; resize(); } } else pfGood = 0; }
+  U.uTime.value = now / 1000; compMat.uniforms.uT.value = (now / 1000) % 100;
+  U.uMix.value = Math.min(1, U.uMix.value + dt / morphDur);
+
+  // 章节节奏
+  if (playing && c.dur) {
+    chT += raw; const b = document.querySelector(`.steps button[data-i="${ch}"] i`); if (b) b.style.width = Math.min(100, chT / c.dur * 100) + '%';
+    if (chT >= c.dur) go(ch + 1);
+  }
+  if (c.key === 'src') while (srcFired < SRC.length && T > 1.0 + srcFired * 1.15) {
+    const n = srcFired++, s = SRC[n];
+    dropAt(s.at[0], s.at[1], () => { srcOn(n, true); if (CH[ch].key === 'src') { addTag(...srcTag(s)); links[n].on = true; } });
+  }
+  if (c.key === 'sim' && T > 2.6) simN = Math.min(SWEEP.length, Math.floor((T - 2.6) / 4.2 * SWEEP.length));
+  recShown = ease(recShown, rec, Math.min(1, dt * 4)); simShown = ease(simShown, simN, Math.min(1, dt * 5));
+  $('mRec').textContent = thou(Math.abs(rec - recShown) < 1 ? rec : recShown); $('mSim').textContent = thou(Math.abs(simN - simShown) < 1 ? simN : simShown);
+
+  // 金池：开场倾注、拐点冲击、环境微澜
+  pour.material.color.setRGB(1, 0.68, 0.3).multiplyScalar(3.2 * (ch === 0 ? 1 : Math.max(0, 1 - T / 0.8)));
+  pour.visible = ch === 0 || T < 0.8;
+  if (pour.visible && Math.random() < 0.6) { ripple(0, -2, 0.5, 0.12); if (Math.random() < 0.25) burst(0, 0.05, -2, 3, 0.5); }
+  if (c.key === 'turn' && T > 1.2) { const ph = (T - 1.2) % 2.2; if (ph < dt * 1.05) { const pi = daily.findIndex(d => d[0] >= D.peak[0] + '-15'); ripple(ridgeX(pi), RZ, 1.6, 0.35); burst(ridgeX(pi), ridgeH(daily[pi][1]) * HS, RZ, 40); } }
+  ambient += dt; if (ch > 0 && ambient > 0.35) { ambient = 0; ripple((Math.random() - .5) * 40, (Math.random() - .5) * 20, 0.5, 0.02); }
+  links.forEach(l => { const u = l.mesh.material.uniforms, tgtOp = l.on && c.key === 'src' ? 1 : 0; u.uT.value = now / 1000; u.uOp.value = ease(u.uOp.value, tgtOp, Math.min(1, dt * 3));
+    l.mesh.visible = l.node.visible = u.uOp.value > 0.01; l.node.scale.y = 0.35 * u.uOp.value; });
+  if (c.key === 'src' && T > 0.5 && (T % 1.6) < dt * 1.05) ripple(CORE[0], CORE[1], 2.2, 0.16);
+  stepDrops(dt); stepSparks(dt); stepRipple();
+
+  // 推演轨迹
+  const fv = c.key === 'sim' ? Math.min(1, Math.max(0, (T - 2.6) / 4.2)) : c.key === 'final' ? 1 : 0;
+  fanGeo.setDrawRange(0, Math.floor(fanN * fv / 2) * 2);
+  fan.material.opacity = ease(fan.material.opacity, c.key === 'sim' ? 0.22 : c.key === 'final' ? 0.12 : 0, k);
+  if (pathTube) { const pv = Math.min(1, Math.max(0, (now - pathT0) / 1400)); pathTube.geometry.setDrawRange(0, Math.floor(pathTube.userData.n * pv / 6) * 6);
+    pathTube.material.opacity = ease(pathTube.material.opacity, (c.key === 'sim' || c.key === 'final') ? 1 : 0, k); }
+
+  // 镜头
+  v3.set(...c.cam); camP.lerp(v3, k); v3.set(...c.tgt); camT.lerp(v3, k); cx = ease(cx, c.cx, k);
+  orbit = ch === 0 ? orbit + dt * 0.035 : ease(orbit, Math.sin(now / 8000) * 0.05, k * 0.6);
+  const rx = camP.x - camT.x, rz = camP.z - camT.z, cs = Math.cos(orbit), sn = Math.sin(orbit);
+  cam.position.set(camT.x + rx * cs + rz * sn + mx * 0.8, camP.y - my * 0.6, camT.z - rx * sn + rz * cs);
+  cy = ease(cy, c.cy ?? .5, k);
+  cam.lookAt(camT); cam.setViewOffset(W, H, -(cx - .5) * W, -(cy - .5) * H, W, H);
+  compMat.uniforms.uC.value.set(cx, 0.55);
+
+  renderFrame();
+  drawDag(now); drawViz(T);
+  for (const t of tags) { v3.copy(t.v).project(cam); t.el.style.transform = `translate(${(v3.x + 1) / 2 * W}px, ${(1 - v3.y) / 2 * H}px)`; t.el.style.visibility = v3.z < 1 ? 'visible' : 'hidden'; }
+  requestAnimationFrame(frame);
+}
+
+// ===================== 图表导出 =====================
+const charts = {};
+const AX = { axisLine: { lineStyle: { color: '#CFC6B8' } }, axisTick: { show: false }, axisLabel: { color: '#6B6153', fontSize: 12 }, splitLine: { lineStyle: { color: '#EEE8DE' } } };
+const yL = D.years.map((y, k) => yLab(k)), GOLD = '#C98A0E', INK = '#2B2418', HOT = '#E0561B';
+function drawCharts() {
+  const mk = (id, o) => (charts[id] ||= echarts.init($(id))).setOption({ animationDuration: 800, textStyle: { fontFamily: 'SHS, PingFang SC, Microsoft YaHei, sans-serif' }, ...o }, true);
+  mk('c1', { grid: { left: 52, right: 20, top: 20, bottom: 30 }, tooltip: { trigger: 'axis' },
+    xAxis: { type: 'category', data: daily.map(d => d[0]), ...AX, axisLabel: { ...AX.axisLabel, interval: 240, formatter: v => v.slice(0, 4) }, splitLine: { show: false } },
+    yAxis: { type: 'value', ...AX },
+    series: [{ type: 'line', data: daily.map(d => d[1]), showSymbol: false, lineStyle: { color: GOLD, width: 1.6 }, areaStyle: { color: 'rgba(201,138,14,.12)' },
+      markPoint: { symbolSize: 44, itemStyle: { color: HOT }, label: { fontSize: 11, formatter: p => Math.round(p.value) }, data: [{ type: 'max' }] } }] });
+  mk('c2', { grid: { left: 52, right: 58, top: 36, bottom: 30 }, tooltip: { trigger: 'axis' }, legend: { top: 0, right: 0, textStyle: { color: '#6B6153' } },
+    xAxis: { type: 'category', data: yL, ...AX, splitLine: { show: false } },
+    yAxis: [{ type: 'value', name: '吨', ...AX }, { type: 'value', name: '元/克', ...AX, splitLine: { show: false } }],
+    series: [{ name: '克重消费（吨，粗估）', type: 'bar', barWidth: '44%', data: D.volume.map(v => +v.toFixed(1)), itemStyle: { color: GOLD, borderRadius: [3, 3, 0, 0] }, label: { show: true, position: 'top', color: INK } },
+      { name: '年均金价', type: 'line', yAxisIndex: 1, data: D.price.map(v => +v.toFixed(1)), lineStyle: { color: HOT, width: 2.5 }, itemStyle: { color: HOT }, symbolSize: 7 }] });
+  $('c3t').textContent = `金价与销售额相关性（r = ${sgn(D.r, 3)}）`;
+  mk('c3', { grid: { left: 56, right: 30, top: 20, bottom: 44 }, tooltip: { formatter: p => p.data[2] ? `${p.data[2]}<br>${p.data[0]} 元/克　${p.data[1]} 亿元` : '' },
+    xAxis: { type: 'value', name: '年均金价（元/克）', nameLocation: 'middle', nameGap: 28, min: 350, max: 1050, ...AX }, yAxis: { type: 'value', name: '亿元', min: 400, ...AX },
+    series: [{ type: 'scatter', symbolSize: 16, data: D.price.map((p, k) => [+p.toFixed(0), +sales[k].toFixed(1), yL[k]]), itemStyle: { color: GOLD }, label: { show: true, formatter: p => p.data[2], position: 'right', color: INK } },
+      { type: 'line', showSymbol: false, data: [[360, rA + rB * 360], [1040, rA + rB * 1040]], lineStyle: { color: HOT, type: 'dashed', width: 2 } }] });
+  mk('c4', { grid: { left: 52, right: 20, top: 36, bottom: 30 }, tooltip: { trigger: 'axis', valueFormatter: v => v == null ? '' : v + ' 亿元' }, legend: { top: 0, right: 0, textStyle: { color: '#6B6153' } },
+    xAxis: { type: 'category', data: [...yL, ...FY.map(String)], ...AX, splitLine: { show: false } }, yAxis: { type: 'value', min: 400, ...AX },
+    series: [{ name: `实际（${YL} 年化）`, type: 'bar', barWidth: '46%', data: [...sales.map(v => +v.toFixed(1)), ...FY.map(() => null)], itemStyle: { color: '#D9CFBF' } },
+      ...[['opt', '#8C6A10'], ['base', HOT], ['con', '#9A8F80']].map(([kk, col]) => ({ name: SCEN[kk].name, type: 'line', symbolSize: 6,
+        data: [...sales.map((v, i) => i === NY - 1 ? +v.toFixed(1) : null), ...RUN[kk].map(r => +r.S.toFixed(1))],
+        lineStyle: { color: col, width: kk === 'base' ? 3 : 1.6, type: kk === 'base' ? 'solid' : 'dashed' }, itemStyle: { color: col },
+        label: kk === 'base' ? { show: true, position: 'top', fontSize: 11, color: col, formatter: p => p.dataIndex >= NY ? pct(RUN.base[p.dataIndex - NY].gr) : '' } : undefined }))] });
+}
+function sheet(open) { $('sheet').classList.toggle('open', open); if (open) requestAnimationFrame(drawCharts); }
+$('xp').onclick = () => sheet(true); $('close').onclick = () => sheet(false);
+$('sheet').addEventListener('click', e => {
+  if (e.target === $('sheet')) return sheet(false);
+  const id = e.target.closest('button')?.dataset.c; if (!id) return;
+  const a = document.createElement('a'); a.href = charts[id].getDataURL({ type: 'png', pixelRatio: 3, backgroundColor: '#fff' });
+  a.download = e.target.closest('.card').querySelector('h4').textContent + '.png'; a.click();
+});
+
+// ===================== 启动 =====================
+[ripA, ripB].forEach(t => { R.setRenderTarget(t); R.clear(); }); R.setRenderTarget(null);
+resize();
+Promise.all([document.fonts.load('900 100px SHS'), document.fonts.load('500 20px SHS')]).catch(() => {}).then(() => {
+  const h = location.hash.match(/^#(\d)/);
+  go(h ? +h[1] : 0, true);
+  if (/e/.test(location.hash)) sheet(true);
+  if (/p/.test(location.hash)) start();
+  status(); requestAnimationFrame(frame);
+  if (ch === 0) setTimeout(() => stream($('tsub'), TSUB, { speed: 0.8 }), 600); else $('tsub').textContent = TSUB;
+});
+})();
+</script>
+</body>
+</html>
